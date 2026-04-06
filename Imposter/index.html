@@ -83,6 +83,8 @@
       background: #f5f5f5;
       color: #111;
       font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
     }
     button.primary {
       background: #111;
@@ -116,6 +118,61 @@
     ul {
       padding-left: 20px;
       margin: 8px 0 0;
+    }
+    .player-profile-editor {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #e6e6e6;
+      border-radius: 12px;
+      background: #fcfcfc;
+    }
+    .player-profile-preview {
+      flex-shrink: 0;
+    }
+    .player-fields {
+      flex: 1;
+      min-width: 0;
+    }
+    .avatar-image {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: block;
+      background: #ececec;
+      border: 2px solid rgba(255,255,255,0.9);
+      box-shadow: 0 8px 18px rgba(17,17,17,0.12);
+    }
+    .avatar-image.small {
+      width: 40px;
+      height: 40px;
+    }
+    .player-identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+    .player-identity-text {
+      min-width: 0;
+    }
+    .player-identity .role {
+      margin: 0 0 4px;
+    }
+    .reveal-status {
+      margin: 0;
+    }
+    .reveal-timer {
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    .player-result {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
   </style>
 </head>
@@ -154,16 +211,23 @@
 
     <section id="reveal-screen" class="card hidden">
       <h2 id="reveal-title">Handy weitergeben</h2>
-      <p id="reveal-player" class="role"></p>
+      <div class="player-identity">
+        <img id="reveal-avatar" class="avatar-image" alt="">
+        <div class="player-identity-text">
+          <p id="reveal-player" class="role"></p>
+          <p id="reveal-status" class="muted reveal-status">Halte den Button kurz gedrückt. Die Rolle wird nur kurz eingeblendet.</p>
+        </div>
+      </div>
       <p class="muted">Sorge dafür, dass niemand anderes hinschaut.</p>
 
       <div id="role-box" class="card hidden" style="margin:12px 0 0;">
         <p id="role-main" class="role"></p>
         <p id="role-hint" class="hint"></p>
       </div>
+      <p id="reveal-timer" class="muted reveal-timer hidden"></p>
 
       <div class="buttons">
-        <button id="show-role" class="primary">Rolle aufdecken</button>
+        <button id="show-role" class="primary">Gedrückt halten zum Aufdecken</button>
         <button id="next-player" class="hidden">Verstanden, weiter</button>
       </div>
     </section>
@@ -236,6 +300,9 @@
     const setupError = document.getElementById('setup-error');
 
     const revealPlayer = document.getElementById('reveal-player');
+    const revealAvatar = document.getElementById('reveal-avatar');
+    const revealStatus = document.getElementById('reveal-status');
+    const revealTimer = document.getElementById('reveal-timer');
     const showRoleButton = document.getElementById('show-role');
     const nextPlayerButton = document.getElementById('next-player');
     const roleBox = document.getElementById('role-box');
@@ -292,6 +359,27 @@
       hart: WORDS_HARD
     };
 
+    const AVATAR_STYLES = [
+      { id: 'koralle', label: 'Koralle', colors: ['#ff7b72', '#ffb86b'] },
+      { id: 'lagune', label: 'Lagune', colors: ['#0077b6', '#00b4d8'] },
+      { id: 'beere', label: 'Beere', colors: ['#b5179e', '#ff8fab'] },
+      { id: 'wald', label: 'Wald', colors: ['#386641', '#90be6d'] },
+      { id: 'nacht', label: 'Nacht', colors: ['#2b2d42', '#4361ee'] },
+      { id: 'duene', label: 'Duene', colors: ['#9c6644', '#dda15e'] },
+      { id: 'minze', label: 'Minze', colors: ['#2a9d8f', '#8ecae6'] },
+      { id: 'glut', label: 'Glut', colors: ['#d62828', '#f77f00'] },
+      { id: 'zucker', label: 'Zucker', colors: ['#ff5d8f', '#ffc857'] },
+      { id: 'stahl', label: 'Stahl', colors: ['#495057', '#adb5bd'] },
+      { id: 'pflaume', label: 'Pflaume', colors: ['#6a4c93', '#c77dff'] },
+      { id: 'oase', label: 'Oase', colors: ['#588157', '#a3b18a'] }
+    ];
+    const REVEAL_HOLD_DELAY_MS = 350;
+    const REVEAL_VISIBLE_MS = 4000;
+
+    let revealHoldTimeout = null;
+    let revealAutoHideTimeout = null;
+    let revealCountdownInterval = null;
+
     function showError(message) {
       setupError.textContent = message;
       setupError.classList.remove('hidden');
@@ -310,22 +398,137 @@
       return Math.max(1, Math.min(30, Math.floor(count)));
     }
 
+    function getDefaultAvatarId(index) {
+      return AVATAR_STYLES[index % AVATAR_STYLES.length].id;
+    }
+
+    function getAvatarStyle(avatarId) {
+      return AVATAR_STYLES.find((style) => style.id === avatarId) || AVATAR_STYLES[0];
+    }
+
+    function getPlayerInitial(name) {
+      const chars = Array.from((name || '').trim());
+      const alphanumeric = chars.find((char) => /[0-9A-Za-zÄÖÜäöüß]/.test(char));
+      return (alphanumeric || chars[0] || '?').toLocaleUpperCase('de-DE');
+    }
+
+    function getAvatarDataUri(player, size) {
+      const style = getAvatarStyle(player.avatarId);
+      const initial = getPlayerInitial(player.name);
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">
+          <defs>
+            <linearGradient id="grad" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="${style.colors[0]}"/>
+              <stop offset="100%" stop-color="${style.colors[1]}"/>
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="32" fill="url(#grad)"/>
+          <circle cx="48" cy="16" r="12" fill="rgba(255,255,255,0.18)"/>
+          <circle cx="18" cy="50" r="16" fill="rgba(0,0,0,0.10)"/>
+          <text x="32" y="40" text-anchor="middle" font-size="28" font-family="Arial, sans-serif" font-weight="700" fill="#ffffff">${initial}</text>
+        </svg>
+      `;
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+
+    function updateAvatarImage(image, player, size = 56) {
+      image.src = getAvatarDataUri(player, size);
+      image.alt = `Profilbild von ${player.name}`;
+    }
+
+    function createAvatarImage(player, small = false) {
+      const image = document.createElement('img');
+      image.className = small ? 'avatar-image small' : 'avatar-image';
+      updateAvatarImage(image, player, small ? 40 : 56);
+      return image;
+    }
+
+    function collectSetupPlayers() {
+      const rows = Array.from(namesWrapper.querySelectorAll('.player-profile-editor'));
+      return rows.map((row, index) => {
+        const nameInput = row.querySelector('.player-name-input');
+        const avatarSelect = row.querySelector('.player-avatar-select');
+        return {
+          name: nameInput ? nameInput.value.trim() : `Spieler ${index + 1}`,
+          avatarId: avatarSelect ? avatarSelect.value : getDefaultAvatarId(index)
+        };
+      });
+    }
+
+    function syncProfilePreview(row) {
+      if (!row) {
+        return;
+      }
+
+      const nameInput = row.querySelector('.player-name-input');
+      const avatarSelect = row.querySelector('.player-avatar-select');
+      const preview = row.querySelector('.avatar-image');
+
+      if (!nameInput || !avatarSelect || !preview) {
+        return;
+      }
+
+      const fallbackName = nameInput.value.trim() || nameInput.placeholder || 'Spieler';
+      updateAvatarImage(preview, { name: fallbackName, avatarId: avatarSelect.value }, 56);
+    }
+
     function renderNameInputs() {
       const count = getPlayerCount();
       if (Number(playerCountInput.value) > 30) {
         playerCountInput.value = '30';
       }
 
-      const previousNames = Array.from(namesWrapper.querySelectorAll('input')).map((input) => input.value.trim());
-
-      let html = '';
+      const previousPlayers = collectSetupPlayers();
+      namesWrapper.replaceChildren();
       for (let index = 0; index < count; index += 1) {
         const fallback = `Spieler ${index + 1}`;
-        const value = previousNames[index] || fallback;
-        html += `<label for="player-name-${index}">Name Spieler ${index + 1}</label>`;
-        html += `<input id="player-name-${index}" type="text" value="${value.replace(/"/g, '&quot;')}">`;
+        const previous = previousPlayers[index] || {};
+        const player = {
+          name: previous.name || fallback,
+          avatarId: previous.avatarId || getDefaultAvatarId(index)
+        };
+
+        const row = document.createElement('div');
+        row.className = 'player-profile-editor';
+
+        const previewWrapper = document.createElement('div');
+        previewWrapper.className = 'player-profile-preview';
+        previewWrapper.append(createAvatarImage(player));
+
+        const fields = document.createElement('div');
+        fields.className = 'player-fields';
+
+        const nameLabel = document.createElement('label');
+        nameLabel.htmlFor = `player-name-${index}`;
+        nameLabel.textContent = `Name Spieler ${index + 1}`;
+
+        const nameInput = document.createElement('input');
+        nameInput.id = `player-name-${index}`;
+        nameInput.type = 'text';
+        nameInput.value = player.name;
+        nameInput.placeholder = fallback;
+        nameInput.className = 'player-name-input';
+
+        const avatarLabel = document.createElement('label');
+        avatarLabel.htmlFor = `player-avatar-${index}`;
+        avatarLabel.textContent = 'Profilbild';
+
+        const avatarSelect = document.createElement('select');
+        avatarSelect.id = `player-avatar-${index}`;
+        avatarSelect.className = 'player-avatar-select';
+        AVATAR_STYLES.forEach((style) => {
+          const option = document.createElement('option');
+          option.value = style.id;
+          option.textContent = style.label;
+          option.selected = style.id === player.avatarId;
+          avatarSelect.append(option);
+        });
+
+        fields.append(nameLabel, nameInput, avatarLabel, avatarSelect);
+        row.append(previewWrapper, fields);
+        namesWrapper.append(row);
       }
-      namesWrapper.innerHTML = html;
 
       const maxImposters = Math.max(1, count - 1);
       imposterCountInput.max = String(maxImposters);
@@ -352,15 +555,105 @@
     }
 
     function collectPlayers() {
-      const inputs = Array.from(namesWrapper.querySelectorAll('input'));
-      return inputs.map((input, index) => {
-        const value = input.value.trim();
-        return value || `Spieler ${index + 1}`;
-      });
+      return collectSetupPlayers().map((player, index) => ({
+        name: player.name || `Spieler ${index + 1}`,
+        avatarId: player.avatarId || getDefaultAvatarId(index)
+      }));
+    }
+
+    function clearRevealTimers() {
+      if (revealHoldTimeout) {
+        window.clearTimeout(revealHoldTimeout);
+        revealHoldTimeout = null;
+      }
+      if (revealAutoHideTimeout) {
+        window.clearTimeout(revealAutoHideTimeout);
+        revealAutoHideTimeout = null;
+      }
+      if (revealCountdownInterval) {
+        window.clearInterval(revealCountdownInterval);
+        revealCountdownInterval = null;
+      }
+    }
+
+    function fillRoleContent() {
+      const index = state.revealIndex;
+      const isImposter = state.imposterIndices.includes(index);
+
+      if (isImposter) {
+        roleMain.textContent = 'Du bist der Imposter';
+        roleHint.textContent = state.hintEnabled
+          ? `Tipp: Die Kategorie ist „${state.category}“.`
+          : 'Du bekommst keinen Tipp zur Kategorie.';
+      } else {
+        roleMain.textContent = `Begriff: ${state.word}`;
+        roleHint.textContent = `Kategorie: ${state.category}`;
+      }
+
+      roleBox.classList.remove('hidden');
+    }
+
+    function updateRevealCountdown(remainingMs) {
+      const secondsRemaining = Math.max(1, Math.ceil(remainingMs / 1000));
+      revealTimer.textContent = `Noch ${secondsRemaining} Sekunde${secondsRemaining === 1 ? '' : 'n'} sichtbar.`;
+    }
+
+    function finishRolePeek() {
+      clearRevealTimers();
+      roleBox.classList.add('hidden');
+      revealTimer.classList.add('hidden');
+      revealTimer.textContent = '';
+      showRoleButton.classList.add('hidden');
+      nextPlayerButton.classList.remove('hidden');
+      revealStatus.textContent = 'Rolle wieder verborgen. Gib das Handy weiter und tippe dann auf Weiter.';
+      state.isRoleShown = true;
+    }
+
+    function revealRoleTemporarily() {
+      fillRoleContent();
+      showRoleButton.classList.add('hidden');
+      nextPlayerButton.classList.add('hidden');
+      revealStatus.textContent = 'Nur fuer dich: Praege dir die Rolle ein, danach verschwindet sie wieder.';
+      revealTimer.classList.remove('hidden');
+      updateRevealCountdown(REVEAL_VISIBLE_MS);
+
+      const startedAt = Date.now();
+      revealCountdownInterval = window.setInterval(() => {
+        const remainingMs = REVEAL_VISIBLE_MS - (Date.now() - startedAt);
+        if (remainingMs > 0) {
+          updateRevealCountdown(remainingMs);
+        }
+      }, 200);
+      revealAutoHideTimeout = window.setTimeout(finishRolePeek, REVEAL_VISIBLE_MS);
+    }
+
+    function handleRevealStart() {
+      if (state.isRoleShown || revealHoldTimeout || revealAutoHideTimeout) {
+        return;
+      }
+
+      showRoleButton.textContent = 'Halten...';
+      revealStatus.textContent = 'Kurz weiter gedrueckt halten, dann erscheint deine Rolle.';
+      revealHoldTimeout = window.setTimeout(() => {
+        revealHoldTimeout = null;
+        revealRoleTemporarily();
+      }, REVEAL_HOLD_DELAY_MS);
+    }
+
+    function handleRevealCancel() {
+      if (!revealHoldTimeout || state.isRoleShown || revealAutoHideTimeout) {
+        return;
+      }
+
+      window.clearTimeout(revealHoldTimeout);
+      revealHoldTimeout = null;
+      showRoleButton.textContent = 'Gedrückt halten zum Aufdecken';
+      revealStatus.textContent = 'Halte den Button kurz gedrückt. Die Rolle wird nur kurz eingeblendet.';
     }
 
     function startGame() {
       hideError();
+      clearRevealTimers();
 
       const players = collectPlayers();
       const playerCount = players.length;
@@ -400,36 +693,23 @@
     }
 
     function renderRevealScreen() {
+      clearRevealTimers();
       const index = state.revealIndex;
-      const name = state.players[index];
-      revealPlayer.textContent = `${name} ist dran`;
+      const player = state.players[index];
+      revealPlayer.textContent = `${player.name} ist dran`;
+      updateAvatarImage(revealAvatar, player, 56);
 
       state.isRoleShown = false;
       roleBox.classList.add('hidden');
       roleMain.textContent = '';
       roleHint.textContent = '';
+      revealStatus.textContent = 'Halte den Button kurz gedrückt. Die Rolle wird nur kurz eingeblendet.';
+      revealTimer.textContent = '';
+      revealTimer.classList.add('hidden');
+      showRoleButton.textContent = 'Gedrückt halten zum Aufdecken';
+      showRoleButton.disabled = false;
       showRoleButton.classList.remove('hidden');
       nextPlayerButton.classList.add('hidden');
-    }
-
-    function showRole() {
-      const index = state.revealIndex;
-      const isImposter = state.imposterIndices.includes(index);
-
-      if (isImposter) {
-        roleMain.textContent = 'Du bist der Imposter';
-        roleHint.textContent = state.hintEnabled
-          ? `Tipp: Die Kategorie ist „${state.category}“.`
-          : 'Du bekommst keinen Tipp zur Kategorie.';
-      } else {
-        roleMain.textContent = `Begriff: ${state.word}`;
-        roleHint.textContent = `Kategorie: ${state.category}`;
-      }
-
-      roleBox.classList.remove('hidden');
-      showRoleButton.classList.add('hidden');
-      nextPlayerButton.classList.remove('hidden');
-      state.isRoleShown = true;
     }
 
     function nextStep() {
@@ -448,6 +728,7 @@
     }
 
     function showPreResults() {
+      clearRevealTimers();
       revealScreen.classList.add('hidden');
       preResultScreen.classList.remove('hidden');
     }
@@ -459,12 +740,26 @@
       resultWord.textContent = state.word;
       resultCategory.textContent = state.category;
 
-      const names = state.imposterIndices.map((idx) => state.players[idx]);
-      imposterList.innerHTML = names.map((name) => `<li>${name}</li>`).join('');
+      imposterList.replaceChildren();
+      state.imposterIndices
+        .map((idx) => state.players[idx])
+        .forEach((player) => {
+          const item = document.createElement('li');
+          const row = document.createElement('div');
+          const name = document.createElement('span');
+
+          row.className = 'player-result';
+          row.append(createAvatarImage(player, true));
+          name.textContent = player.name;
+          row.append(name);
+          item.append(row);
+          imposterList.append(item);
+        });
     }
 
     function resetRound() {
       hideError();
+      clearRevealTimers();
       setupScreen.classList.remove('hidden');
       revealScreen.classList.add('hidden');
       preResultScreen.classList.add('hidden');
@@ -475,8 +770,17 @@
 
     playerCountInput.addEventListener('change', renderNameInputs);
     playerCountInput.addEventListener('input', renderNameInputs);
+    namesWrapper.addEventListener('input', (event) => {
+      syncProfilePreview(event.target.closest('.player-profile-editor'));
+    });
+    namesWrapper.addEventListener('change', (event) => {
+      syncProfilePreview(event.target.closest('.player-profile-editor'));
+    });
     startGameButton.addEventListener('click', startGame);
-    showRoleButton.addEventListener('click', showRole);
+    showRoleButton.addEventListener('pointerdown', handleRevealStart);
+    showRoleButton.addEventListener('pointerup', handleRevealCancel);
+    showRoleButton.addEventListener('pointerleave', handleRevealCancel);
+    showRoleButton.addEventListener('pointercancel', handleRevealCancel);
     nextPlayerButton.addEventListener('click', nextStep);
     showResultsButton.addEventListener('click', showResults);
     newRoundButton.addEventListener('click', resetRound);
