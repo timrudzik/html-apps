@@ -7,37 +7,111 @@
   <style>
     :root {
       color-scheme: light;
+      --bg: #f4efe7;
+      --ink: #1d1a1a;
+      --muted: #6d625d;
+      --panel: rgba(255, 249, 241, 0.86);
+      --panel-strong: rgba(255, 252, 247, 0.96);
+      --border: rgba(75, 49, 34, 0.14);
+      --accent: #c96d38;
+      --accent-strong: #8f3f1e;
+      --accent-soft: #f2c27b;
+      --shadow: 0 22px 55px rgba(92, 57, 34, 0.15);
+      --shadow-soft: 0 12px 30px rgba(92, 57, 34, 0.08);
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
       margin: 0;
-      padding: 20px;
-      background: #fafafa;
-      color: #111;
+      padding: 24px 18px 48px;
+      background:
+        radial-gradient(circle at top left, rgba(242, 194, 123, 0.45), transparent 28%),
+        radial-gradient(circle at top right, rgba(180, 95, 44, 0.18), transparent 24%),
+        linear-gradient(180deg, #f8f2e8 0%, #efe3d5 100%);
+      color: var(--ink);
     }
     .container {
-      max-width: 560px;
+      max-width: 720px;
       margin: 0 auto;
     }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 18px;
+      padding: 24px 22px 22px;
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,0.32), transparent 24%),
+        linear-gradient(145deg, rgba(61, 33, 27, 0.97), rgba(152, 75, 38, 0.94));
+      color: #fff8f1;
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -30px;
+      bottom: -34px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: rgba(255, 241, 223, 0.74);
+    }
     h1 {
-      margin-top: 4px;
-      margin-bottom: 12px;
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: clamp(2.2rem, 5vw, 3.35rem);
+      line-height: 0.94;
+      letter-spacing: -0.04em;
     }
     h2 {
       margin-top: 0;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
+      font-size: 1.55rem;
+      letter-spacing: -0.03em;
     }
     p {
       margin-top: 8px;
       margin-bottom: 10px;
     }
     .card {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-soft);
+    }
+    .screen-kicker {
+      margin: 0 0 4px;
+      color: var(--accent-strong);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.73rem;
+      font-weight: 800;
+    }
+    .section-copy {
+      margin-top: 0;
+      margin-bottom: 18px;
+      color: var(--muted);
+    }
+    .setup-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .field {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(117, 81, 57, 0.09);
     }
     label {
       display: block;
@@ -50,18 +124,31 @@
       width: 100%;
       box-sizing: border-box;
       padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #cfcfcf;
+      border-radius: 14px;
+      border: 1px solid rgba(117, 81, 57, 0.18);
       font-size: 1rem;
-      margin-bottom: 12px;
-      background: #fff;
+      margin-bottom: 0;
+      background: rgba(255,255,255,0.92);
+      color: var(--ink);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.45);
+    }
+    input:focus,
+    select:focus,
+    button:focus-visible,
+    .reveal-cover:focus-visible {
+      outline: 3px solid rgba(201, 109, 56, 0.28);
+      outline-offset: 2px;
     }
     .toggle {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-top: 4px;
-      margin-bottom: 16px;
+      margin-top: 14px;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.62);
+      border: 1px solid rgba(117, 81, 57, 0.09);
       font-weight: 600;
     }
     .toggle input {
@@ -73,41 +160,51 @@
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-top: 10px;
+      margin-top: 16px;
     }
     button {
-      border: 1px solid #cfcfcf;
-      border-radius: 10px;
-      padding: 12px 16px;
+      border: 1px solid rgba(117, 81, 57, 0.16);
+      border-radius: 16px;
+      padding: 13px 18px;
       font-size: 1rem;
-      background: #f5f5f5;
-      color: #111;
-      font-weight: 600;
+      background: rgba(255,255,255,0.72);
+      color: var(--ink);
+      font-weight: 700;
       cursor: pointer;
       touch-action: manipulation;
+      box-shadow: 0 8px 18px rgba(86, 58, 39, 0.08);
+      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
     }
     button.primary {
-      background: #111;
-      color: #fff;
-      border-color: #111;
+      background: linear-gradient(145deg, var(--accent), var(--accent-strong));
+      color: #fffaf5;
+      border-color: rgba(102, 46, 23, 0.2);
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(86, 58, 39, 0.12);
     }
     button:disabled {
       opacity: 0.55;
+      transform: none;
+      box-shadow: none;
     }
     .role {
-      font-size: 1.2rem;
-      font-weight: 700;
+      font-size: 1.35rem;
+      font-weight: 800;
       margin: 8px 0;
+      letter-spacing: -0.02em;
     }
     .hint {
       font-size: 1rem;
-      margin-top: 6px;
+      margin-top: 8px;
+      color: var(--muted);
     }
     .hidden {
       display: none;
     }
     .muted {
-      color: #666;
+      color: var(--muted);
       font-size: 0.95rem;
     }
     .error {
@@ -116,18 +213,21 @@
       margin-top: 4px;
     }
     ul {
-      padding-left: 20px;
-      margin: 8px 0 0;
+      padding-left: 0;
+      margin: 10px 0 0;
+      list-style: none;
     }
     .player-profile-editor {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px;
+      padding: 14px;
       margin-bottom: 12px;
-      border: 1px solid #e6e6e6;
-      border-radius: 12px;
-      background: #fcfcfc;
+      border: 1px solid rgba(117, 81, 57, 0.11);
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,0.42), transparent 28%),
+        rgba(255, 252, 247, 0.86);
     }
     .player-profile-preview {
       flex-shrink: 0;
@@ -142,8 +242,8 @@
       border-radius: 50%;
       display: block;
       background: #ececec;
-      border: 2px solid rgba(255,255,255,0.9);
-      box-shadow: 0 8px 18px rgba(17,17,17,0.12);
+      border: 3px solid rgba(255,255,255,0.96);
+      box-shadow: 0 10px 20px rgba(90, 58, 36, 0.16);
     }
     .avatar-image.small {
       width: 40px;
@@ -164,22 +264,31 @@
     }
     .reveal-stage {
       position: relative;
-      min-height: 180px;
-      margin-top: 12px;
-      border-radius: 18px;
+      min-height: 220px;
+      margin-top: 14px;
+      border-radius: 24px;
       overflow: hidden;
-      background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%);
-      border: 1px solid #e4e4e4;
+      background:
+        radial-gradient(circle at top left, rgba(244, 206, 157, 0.18), transparent 26%),
+        linear-gradient(180deg, rgba(255, 251, 245, 0.95) 0%, rgba(245, 238, 228, 0.92) 100%);
+      border: 1px solid rgba(117, 81, 57, 0.11);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
     }
     .reveal-role-box {
       margin: 0;
-      min-height: 180px;
+      min-height: 220px;
       border: 0;
       border-radius: 0;
       box-shadow: none;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 28px 24px;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.35), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08));
     }
     .reveal-cover {
       position: absolute;
@@ -191,14 +300,15 @@
       gap: 12px;
       padding: 20px;
       background:
-        radial-gradient(circle at top, rgba(255,255,255,0.3), transparent 45%),
-        linear-gradient(160deg, #222 0%, #444 100%);
+        radial-gradient(circle at top, rgba(255,255,255,0.16), transparent 42%),
+        linear-gradient(160deg, #2d1e1a 0%, #6f3d2b 55%, #c96d38 100%);
       color: #fff;
       text-align: center;
       user-select: none;
       touch-action: none;
-      transition: transform 180ms ease;
+      transition: transform 180ms ease, box-shadow 180ms ease;
       cursor: grab;
+      box-shadow: inset 0 -22px 35px rgba(0,0,0,0.15);
     }
     .reveal-cover.dragging {
       transition: none;
@@ -206,6 +316,7 @@
     }
     .reveal-cover.revealed {
       transform: translateY(-100%);
+      pointer-events: none;
     }
     .reveal-grip {
       width: 64px;
@@ -217,39 +328,107 @@
     .reveal-instruction {
       margin: 0;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 1.02rem;
     }
     .reveal-subtext {
       margin: 0;
       color: rgba(255,255,255,0.8);
       font-size: 0.95rem;
     }
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .result-tile {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.62);
+      border: 1px solid rgba(117, 81, 57, 0.1);
+    }
+    .result-label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+    .result-value {
+      display: block;
+      font-size: 1.18rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    #imposter-list {
+      margin-top: 12px;
+    }
+    #imposter-list li {
+      margin-bottom: 10px;
+    }
     .player-result {
       display: flex;
       align-items: center;
       gap: 10px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(117, 81, 57, 0.1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+    }
+    @media (max-width: 640px) {
+      body {
+        padding: 16px 14px 34px;
+      }
+      .setup-grid,
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero {
+        padding: 22px 18px;
+      }
+      .card {
+        padding: 18px;
+      }
+      .player-profile-editor {
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Imposter</h1>
+    <header class="hero">
+      <p class="eyebrow">Social Deduction</p>
+      <h1>Imposter</h1>
+      <p class="section-copy" style="color:rgba(255,244,232,0.82);margin-bottom:0;">Schnell gestartet, herrlich verdächtig und perfekt für eine Runde am Handy.</p>
+    </header>
 
     <section id="setup-screen" class="card">
+      <p class="screen-kicker">Start</p>
       <h2>Spiel vorbereiten</h2>
+      <p class="section-copy">Wähle die Runde, gib die Namen ein und lass die App den Rest übernehmen.</p>
 
-      <label for="player-count">Anzahl Spieler</label>
-      <input id="player-count" type="number" min="3" max="30" value="6">
-
-      <label for="imposter-count">Anzahl Imposter</label>
-      <input id="imposter-count" type="number" min="1" value="1">
-
-      <label for="word-pack">Wörterpaket</label>
-      <select id="word-pack">
-        <option value="kinder">Kinderfreundlich</option>
-        <option value="standard" selected>Standard</option>
-        <option value="hart">Hart</option>
-      </select>
+      <div class="setup-grid">
+        <div class="field">
+          <label for="player-count">Anzahl Spieler</label>
+          <input id="player-count" type="number" min="3" max="30" value="6">
+        </div>
+        <div class="field">
+          <label for="imposter-count">Anzahl Imposter</label>
+          <input id="imposter-count" type="number" min="1" value="1">
+        </div>
+        <div class="field">
+          <label for="word-pack">Wörterpaket</label>
+          <select id="word-pack">
+            <option value="kinder">Kinderfreundlich</option>
+            <option value="standard" selected>Standard</option>
+            <option value="hart">Hart</option>
+          </select>
+        </div>
+      </div>
 
       <div class="toggle">
         <input id="hint-toggle" type="checkbox">
@@ -265,11 +444,13 @@
     </section>
 
     <section id="reveal-screen" class="card hidden">
+      <p class="screen-kicker">Geheime Rolle</p>
       <h2 id="reveal-title">Handy weitergeben</h2>
       <div class="player-identity">
         <img id="reveal-avatar" class="avatar-image" alt="">
         <div class="player-identity-text">
           <p id="reveal-player" class="role"></p>
+          <p id="reveal-progress" class="muted" style="margin:4px 0 0;"></p>
         </div>
       </div>
       <p class="muted">Sorge dafür, dass niemand anderes hinschaut.</p>
@@ -291,19 +472,20 @@
       </div>
     </section>
 
-    <section id="pre-result-screen" class="card hidden">
-      <h2>Auflösung bereit</h2>
-      <p>Alle Rollen wurden angesehen.</p>
-      <p class="muted">Tippe auf den Button, um die tatsächliche Auflösung zu zeigen.</p>
-      <div class="buttons">
-        <button id="show-results" class="primary">Auflösung anzeigen</button>
-      </div>
-    </section>
-
     <section id="result-screen" class="card hidden">
+      <p class="screen-kicker">Auflösung</p>
       <h2>Auflösung</h2>
-      <p><strong>Gesuchter Begriff:</strong> <span id="result-word"></span></p>
-      <p><strong>Kategorie:</strong> <span id="result-category"></span></p>
+      <p class="section-copy">Jetzt ist Schluss mit Heimlichtuerei.</p>
+      <div class="result-grid">
+        <div class="result-tile">
+          <span class="result-label">Gesuchter Begriff</span>
+          <span id="result-word" class="result-value"></span>
+        </div>
+        <div class="result-tile">
+          <span class="result-label">Kategorie</span>
+          <span id="result-category" class="result-value"></span>
+        </div>
+      </div>
       <p><strong>Imposter waren:</strong></p>
       <ul id="imposter-list"></ul>
 
@@ -348,7 +530,6 @@
 
     const setupScreen = document.getElementById('setup-screen');
     const revealScreen = document.getElementById('reveal-screen');
-    const preResultScreen = document.getElementById('pre-result-screen');
     const resultScreen = document.getElementById('result-screen');
 
     const playerCountInput = document.getElementById('player-count');
@@ -359,6 +540,7 @@
     const setupError = document.getElementById('setup-error');
 
     const revealPlayer = document.getElementById('reveal-player');
+    const revealProgress = document.getElementById('reveal-progress');
     const revealAvatar = document.getElementById('reveal-avatar');
     const revealCover = document.getElementById('reveal-cover');
     const revealInstruction = document.getElementById('reveal-instruction');
@@ -372,7 +554,6 @@
     const imposterList = document.getElementById('imposter-list');
 
     const startGameButton = document.getElementById('start-game');
-    const showResultsButton = document.getElementById('show-results');
     const newRoundButton = document.getElementById('new-round');
 
     let state = {
@@ -774,12 +955,19 @@
 
     function completeReveal() {
       revealDragState.active = false;
+      const pointerId = revealDragState.pointerId;
       revealDragState.pointerId = null;
       revealDragState.offset = 0;
       revealCover.classList.remove('dragging');
+      if (pointerId !== null && typeof revealCover.releasePointerCapture === 'function' && revealCover.hasPointerCapture(pointerId)) {
+        revealCover.releasePointerCapture(pointerId);
+      }
       revealCover.style.transform = '';
       revealCover.classList.add('revealed');
       revealInstruction.textContent = 'Aufgedeckt';
+      nextPlayerButton.textContent = state.revealIndex >= state.players.length - 1
+        ? 'Auflösung ansehen'
+        : 'Weiter zum nächsten Spieler';
       nextPlayerButton.classList.remove('hidden');
       state.isRoleShown = true;
     }
@@ -823,6 +1011,9 @@
       if (revealDragState.offset >= getRevealThreshold()) {
         completeReveal();
       } else {
+        if (typeof revealCover.releasePointerCapture === 'function' && revealCover.hasPointerCapture(event.pointerId)) {
+          revealCover.releasePointerCapture(event.pointerId);
+        }
         resetRevealCover();
       }
     }
@@ -872,7 +1063,6 @@
       };
 
       setupScreen.classList.add('hidden');
-      preResultScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
       revealScreen.classList.remove('hidden');
       renderRevealScreen();
@@ -882,6 +1072,7 @@
       const index = state.revealIndex;
       const player = state.players[index];
       revealPlayer.textContent = `${player.name} ist dran`;
+      revealProgress.textContent = `Spieler ${index + 1} von ${state.players.length}`;
       updateAvatarImage(revealAvatar, player, 56);
 
       state.isRoleShown = false;
@@ -903,16 +1094,11 @@
         return;
       }
 
-      showPreResults();
-    }
-
-    function showPreResults() {
-      revealScreen.classList.add('hidden');
-      preResultScreen.classList.remove('hidden');
+      showResults();
     }
 
     function showResults() {
-      preResultScreen.classList.add('hidden');
+      revealScreen.classList.add('hidden');
       resultScreen.classList.remove('hidden');
 
       resultWord.textContent = state.word;
@@ -939,7 +1125,6 @@
       hideError();
       setupScreen.classList.remove('hidden');
       revealScreen.classList.add('hidden');
-      preResultScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
       renderNameInputs();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -960,7 +1145,6 @@
     revealCover.addEventListener('pointercancel', handleRevealPointerEnd);
     revealCover.addEventListener('keydown', handleRevealKeydown);
     nextPlayerButton.addEventListener('click', nextStep);
-    showResultsButton.addEventListener('click', showResults);
     newRoundButton.addEventListener('click', resetRound);
 
     renderNameInputs();
