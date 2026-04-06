@@ -45,7 +45,8 @@
       margin-bottom: 6px;
     }
     input[type="number"],
-    input[type="text"] {
+    input[type="text"],
+    select {
       width: 100%;
       box-sizing: border-box;
       padding: 10px 12px;
@@ -131,6 +132,13 @@
       <label for="imposter-count">Anzahl Imposter</label>
       <input id="imposter-count" type="number" min="1" value="1">
 
+      <label for="word-pack">Wörterpaket</label>
+      <select id="word-pack">
+        <option value="kinder">Kinderfreundlich</option>
+        <option value="standard" selected>Standard</option>
+        <option value="hart">Hart</option>
+      </select>
+
       <div class="toggle">
         <input id="hint-toggle" type="checkbox">
         <label for="hint-toggle" style="margin:0;font-weight:600;">Imposter bekommt Kategorie-Tipp</label>
@@ -212,6 +220,7 @@
 
     const playerCountInput = document.getElementById('player-count');
     const imposterCountInput = document.getElementById('imposter-count');
+    const wordPackSelect = document.getElementById('word-pack');
     const hintToggle = document.getElementById('hint-toggle');
     const namesWrapper = document.getElementById('names-wrapper');
     const setupError = document.getElementById('setup-error');
@@ -235,9 +244,41 @@
       imposterIndices: [],
       word: '',
       category: '',
+      wordPack: 'standard',
       hintEnabled: false,
       revealIndex: 0,
       isRoleShown: false
+    };
+
+    const WORDS_KIDS = {
+      "Tiere": ["Hund", "Katze", "Maus", "Elefant", "Giraffe", "Pinguin", "Delfin", "Wal", "Zebra", "Löwe", "Tiger", "Bär", "Fuchs", "Hase", "Eule", "Papagei", "Pferd", "Schaf", "Kuh", "Huhn"],
+      "Essen": ["Pizza", "Burger", "Spaghetti", "Salat", "Brot", "Käse", "Suppe", "Apfel", "Banane", "Erdbeere", "Schokolade", "Kuchen", "Kartoffel", "Reis", "Pfannkuchen", "Nudeln", "Tomate", "Gurke", "Karotte", "Joghurt"],
+      "Getränke": ["Wasser", "Tee", "Saft", "Limonade", "Milch", "Kakao", "Smoothie", "Eistee", "Apfelschorle", "Orangensaft", "Traubensaft", "Kirschsaft", "Bananenmilch", "Erdbeermilch", "Früchtetee", "Eiswasser", "Minzwasser", "Sprudel", "Kräutertee", "Zitronenwasser"],
+      "Orte": ["Schule", "Bahnhof", "Flughafen", "Bibliothek", "Supermarkt", "Park", "Strand", "Wald", "Berg", "Insel", "Kino", "Museum", "Zoo", "Restaurant", "Schwimmbad", "Spielplatz", "Bäckerei", "Turnhalle", "Pausenhof", "Garten"],
+      "Fahrzeuge": ["Auto", "Fahrrad", "Bus", "Zug", "Flugzeug", "Boot", "Roller", "U-Bahn", "Straßenbahn", "LKW", "Helikopter", "Kanu", "Skateboard", "Traktor", "Taxi", "Feuerwehrauto", "Polizeiauto", "Schulbus", "Segelboot", "Tretboot"],
+      "Sport": ["Fußball", "Basketball", "Tennis", "Volleyball", "Handball", "Schwimmen", "Laufen", "Radfahren", "Skifahren", "Yoga", "Klettern", "Tischtennis", "Badminton", "Surfen", "Reiten", "Golf", "Turnen", "Eishockey", "Seilspringen", "Inliner"],
+      "Musik": ["Gitarre", "Klavier", "Schlagzeug", "Violine", "Flöte", "Trompete", "Cello", "Mikrofon", "Konzert", "Band", "Song", "Melodie", "Rhythmus", "Chor", "Playlist", "Album", "Kopfhörer", "Lied", "Takt", "Noten"],
+      "Haushalt": ["Tisch", "Stuhl", "Sofa", "Bett", "Lampe", "Spiegel", "Schrank", "Teppich", "Kissen", "Decke", "Toaster", "Mixer", "Pfanne", "Topf", "Messer", "Gabel", "Löffel", "Teller", "Tasse", "Glas"],
+      "Kleidung": ["T-Shirt", "Hose", "Jeans", "Jacke", "Pullover", "Hemd", "Kleid", "Rock", "Schuhe", "Sneaker", "Stiefel", "Mütze", "Schal", "Handschuhe", "Socken", "Gürtel", "Brille", "Uhr", "Rucksack", "Regenjacke"],
+      "Farben": ["Rot", "Blau", "Grün", "Gelb", "Orange", "Lila", "Pink", "Türkis", "Braun", "Schwarz", "Weiß", "Grau", "Beige", "Gold", "Silber", "Mint", "Magenta", "Ocker", "Navy", "Bordeaux"],
+      "Natur": ["Fluss", "See", "Meer", "Wüste", "Vulkan", "Tal", "Wasserfall", "Höhle", "Wiese", "Dschungel", "Savanne", "Quelle", "Bucht", "Lagune", "Felsen", "Insel", "Berggipfel", "Strand", "Regenwald", "Pfad"],
+      "Schule": ["Stift", "Heft", "Buch", "Lineal", "Radiergummi", "Ranzen", "Tafel", "Kreide", "Klassenraum", "Pause", "Hausaufgabe", "Note", "Prüfung", "Projekt", "Stundenplan", "Lehrbuch", "Atlas", "Mäppchen", "Pausenhof", "Tafelwischer"]
+    };
+
+    const WORDS_HARD = {
+      ...WORDS,
+      "Wissenschaft": ["Photosynthese", "Relativität", "Quantenmechanik", "DNA", "RNA", "Enzym", "Mikroskop", "Zellkern", "Evolution", "Gravitation", "Beschleunigung", "Molekül", "Atomkern", "Neutron", "Proton", "Isotop", "Katalysator", "pH-Wert", "Osmose", "Spektrometer"],
+      "Politik": ["Demokratie", "Föderalismus", "Verfassung", "Koalition", "Opposition", "Bundestag", "Bundesrat", "Wahlkreis", "Mandat", "Lobbyismus", "Diplomatie", "Sanktion", "Referendum", "Subsidiarität", "Gewaltenteilung", "Legislative", "Exekutive", "Judikative", "Plenarsaal", "Haushaltsdebatte"],
+      "Wirtschaft": ["Inflation", "Rezession", "Konjunktur", "Liquidität", "Bilanz", "Dividende", "Aktienkurs", "Rendite", "Portfolio", "Anleihe", "Leitzins", "Import", "Export", "Bruttoinlandsprodukt", "Arbeitslosenquote", "Produktivität", "Lieferkette", "Margendruck", "Kapitalfluss", "Steuerquote"],
+      "Philosophie": ["Ethik", "Moral", "Metaphysik", "Erkenntnistheorie", "Determinismus", "Utilitarismus", "Stoizismus", "Dualismus", "Existenzialismus", "Nihilismus", "Dialektik", "Kategorischer Imperativ", "Empirismus", "Rationalismus", "Skeptizismus", "Teleologie", "Ontologie", "Phänomenologie", "Hermeneutik", "Deontologie"],
+      "Medizin": ["Anamnese", "Diagnose", "Therapie", "Prognose", "Symptom", "Entzündung", "Immunabwehr", "Antibiotikum", "Analgesie", "Pathologie", "Radiologie", "Anästhesie", "Neurologie", "Dermatologie", "Onkologie", "Kardiologie", "Pneumologie", "Gastroenterologie", "Endokrinologie", "Orthopädie"],
+      "Recht": ["Vertragsfreiheit", "Haftung", "Vorsatz", "Fahrlässigkeit", "Tatbestand", "Urteil", "Berufung", "Revision", "Prozesskosten", "Schadensersatz", "Unterlassung", "Eigentumsvorbehalt", "Gewährleistung", "Verjährung", "Zwangsvollstreckung", "Anklageschrift", "Beweislast", "Zeugenaussage", "Richterspruch", "Klagebefugnis"]
+    };
+
+    const WORD_PACKS = {
+      kinder: WORDS_KIDS,
+      standard: WORDS,
+      hart: WORDS_HARD
     };
 
     function showError(message) {
@@ -279,10 +320,11 @@
       imposterCountInput.value = String(Math.min(Math.max(1, currentImposters), maxImposters));
     }
 
-    function pickRandomCategoryAndWord() {
-      const categories = Object.keys(WORDS);
+    function pickRandomCategoryAndWord(wordPack) {
+      const selectedPack = WORD_PACKS[wordPack] || WORD_PACKS.standard;
+      const categories = Object.keys(selectedPack);
       const category = categories[Math.floor(Math.random() * categories.length)];
-      const words = WORDS[category];
+      const words = selectedPack[category];
       const word = words[Math.floor(Math.random() * words.length)];
       return { category, word };
     }
@@ -310,6 +352,7 @@
       const players = collectPlayers();
       const playerCount = players.length;
       const imposterCount = Number(imposterCountInput.value);
+      const selectedWordPack = wordPackSelect.value;
 
       if (playerCount < 3) {
         showError('Es müssen mindestens 3 Spieler mitspielen.');
@@ -321,7 +364,7 @@
         return;
       }
 
-      const { category, word } = pickRandomCategoryAndWord();
+      const { category, word } = pickRandomCategoryAndWord(selectedWordPack);
       const randomOrder = shuffledIndices(playerCount);
       const imposterIndices = randomOrder.slice(0, imposterCount);
 
@@ -330,6 +373,7 @@
         imposterIndices,
         word,
         category,
+        wordPack: selectedWordPack,
         hintEnabled: hintToggle.checked,
         revealIndex: 0,
         isRoleShown: false
