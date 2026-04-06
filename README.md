@@ -14,6 +14,8 @@ Beispiel:
 		index.html      <- eine einzelne Mini-App
 	/Timer
 		index.html
+	/Imposter
+		index.html
 	/AndereApp
 		index.html
 ```

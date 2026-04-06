@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Imposter</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fafafa;
+      color: #111;
+    }
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin-top: 4px;
+      margin-bottom: 12px;
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    p {
+      margin-top: 8px;
+      margin-bottom: 10px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cfcfcf;
+      font-size: 1rem;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .toggle input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+    }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    button {
+      border: 1px solid #cfcfcf;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 1rem;
+      background: #f5f5f5;
+      color: #111;
+      font-weight: 600;
+    }
+    button.primary {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+    button:disabled {
+      opacity: 0.55;
+    }
+    .role {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 8px 0;
+    }
+    .hint {
+      font-size: 1rem;
+      margin-top: 6px;
+    }
+    .hidden {
+      display: none;
+    }
+    .muted {
+      color: #666;
+      font-size: 0.95rem;
+    }
+    .error {
+      color: #b30000;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    ul {
+      padding-left: 20px;
+      margin: 8px 0 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Imposter</h1>
+
+    <section id="setup-screen" class="card">
+      <h2>Spiel vorbereiten</h2>
+
+      <label for="player-count">Anzahl Spieler</label>
+      <input id="player-count" type="number" min="3" max="30" value="6">
+
+      <label for="imposter-count">Anzahl Imposter</label>
+      <input id="imposter-count" type="number" min="1" value="1">
+
+      <div class="toggle">
+        <input id="hint-toggle" type="checkbox">
+        <label for="hint-toggle" style="margin:0;font-weight:600;">Imposter bekommt Kategorie-Tipp</label>
+      </div>
+
+      <div id="names-wrapper"></div>
+
+      <div class="buttons">
+        <button id="start-game" class="primary">Spiel starten</button>
+      </div>
+      <p id="setup-error" class="error hidden"></p>
+    </section>
+
+    <section id="reveal-screen" class="card hidden">
+      <h2 id="reveal-title">Handy weitergeben</h2>
+      <p id="reveal-player" class="role"></p>
+      <p class="muted">Sorge dafür, dass niemand anderes hinschaut.</p>
+
+      <div id="role-box" class="card hidden" style="margin:12px 0 0;">
+        <p id="role-main" class="role"></p>
+        <p id="role-hint" class="hint"></p>
+      </div>
+
+      <div class="buttons">
+        <button id="show-role" class="primary">Rolle aufdecken</button>
+        <button id="next-player" class="hidden">Verstanden, weiter</button>
+      </div>
+    </section>
+
+    <section id="result-screen" class="card hidden">
+      <h2>Auflösung</h2>
+      <p><strong>Gesuchter Begriff:</strong> <span id="result-word"></span></p>
+      <p><strong>Kategorie:</strong> <span id="result-category"></span></p>
+      <p><strong>Imposter waren:</strong></p>
+      <ul id="imposter-list"></ul>
+
+      <div class="buttons">
+        <button id="new-round" class="primary">Neue Runde</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const WORDS = {
+      "Tiere": ["Hund", "Katze", "Maus", "Elefant", "Giraffe", "Pinguin", "Delfin", "Wal", "Krokodil", "Schildkröte", "Zebra", "Löwe", "Tiger", "Bär", "Wolf", "Fuchs", "Hase", "Igel", "Eule", "Papagei"],
+      "Berufe": ["Arzt", "Lehrer", "Pilot", "Feuerwehrmann", "Polizist", "Bäcker", "Koch", "Journalist", "Programmierer", "Architekt", "Zahnarzt", "Friseur", "Elektriker", "Mechaniker", "Richter", "Anwalt", "Kellner", "Fotograf", "Florist", "Tierarzt"],
+      "Essen": ["Pizza", "Burger", "Spaghetti", "Sushi", "Salat", "Brot", "Käse", "Suppe", "Steak", "Apfel", "Banane", "Erdbeere", "Schokolade", "Kuchen", "Kartoffel", "Reis", "Omelett", "Lasagne", "Pfannkuchen", "Döner"],
+      "Getränke": ["Wasser", "Tee", "Kaffee", "Saft", "Limonade", "Cola", "Milch", "Kakao", "Smoothie", "Eistee", "Espresso", "Latte", "Cappuccino", "Mineralwasser", "Apfelschorle", "Bier", "Wein", "Cocktail", "Mate", "Energydrink"],
+      "Orte": ["Schule", "Krankenhaus", "Bahnhof", "Flughafen", "Bibliothek", "Supermarkt", "Park", "Strand", "Wald", "Berg", "Insel", "Büro", "Kino", "Theater", "Museum", "Zoo", "Stadion", "Restaurant", "Bäckerei", "Schwimmbad"],
+      "Fahrzeuge": ["Auto", "Fahrrad", "Bus", "Zug", "Flugzeug", "Boot", "Motorrad", "Roller", "U-Bahn", "Straßenbahn", "LKW", "Helikopter", "Segelboot", "Kanu", "Skateboard", "Traktor", "Wohnmobil", "Taxi", "Lieferwagen", "Rettungswagen"],
+      "Sport": ["Fußball", "Basketball", "Tennis", "Volleyball", "Handball", "Schwimmen", "Laufen", "Radfahren", "Skifahren", "Boxen", "Yoga", "Klettern", "Tischtennis", "Badminton", "Rudern", "Surfen", "Reiten", "Golf", "Turnen", "Eishockey"],
+      "Musik": ["Gitarre", "Klavier", "Schlagzeug", "Violine", "Flöte", "Saxofon", "Trompete", "Harfe", "Cello", "Mikrofon", "Konzert", "Band", "Orchester", "DJ", "Song", "Melodie", "Rhythmus", "Chor", "Playlist", "Album"],
+      "Technik": ["Laptop", "Smartphone", "Tablet", "Kopfhörer", "Fernseher", "Kamera", "Drucker", "Maus", "Tastatur", "Router", "Monitor", "Smartwatch", "Ladekabel", "Powerbank", "Bluetooth", "App", "Browser", "Cloud", "Akku", "Joystick"],
+      "Haushalt": ["Tisch", "Stuhl", "Sofa", "Bett", "Lampe", "Spiegel", "Schrank", "Teppich", "Kissen", "Decke", "Ofen", "Toaster", "Mixer", "Pfanne", "Topf", "Messer", "Gabel", "Löffel", "Teller", "Tasse"],
+      "Kleidung": ["T-Shirt", "Hose", "Jeans", "Jacke", "Mantel", "Pullover", "Hemd", "Kleid", "Rock", "Schuhe", "Sneaker", "Stiefel", "Mütze", "Schal", "Handschuhe", "Socken", "Gürtel", "Brille", "Uhr", "Rucksack"],
+      "Wetter": ["Sonne", "Regen", "Schnee", "Wind", "Nebel", "Gewitter", "Blitz", "Wolke", "Sturm", "Hagel", "Hitze", "Kälte", "Frost", "Regenbogen", "Dürre", "Monsun", "Tau", "Brise", "Orkan", "Unwetter"],
+      "Körper": ["Kopf", "Hand", "Fuß", "Auge", "Nase", "Mund", "Ohr", "Arm", "Bein", "Finger", "Rücken", "Bauch", "Herz", "Lunge", "Haut", "Knie", "Schulter", "Hals", "Zahn", "Zunge"],
+      "Schule": ["Stift", "Heft", "Buch", "Lineal", "Radiergummi", "Ranzen", "Tafel", "Kreide", "Klassenraum", "Pause", "Hausaufgabe", "Note", "Prüfung", "Projekt", "Stundenplan", "Lehrbuch", "Atlas", "Mäppchen", "Pausenhof", "Abitur"],
+      "Reisen": ["Koffer", "Pass", "Ticket", "Hotel", "Hostel", "Camping", "Landkarte", "Reiseführer", "Souvenir", "Urlaub", "Roadtrip", "Mietwagen", "Check-in", "Flug", "Abflug", "Ankunft", "Grenze", "Reiseziel", "Backpacking", "Sightseeing"],
+      "Städte": ["Berlin", "Hamburg", "München", "Köln", "Dresden", "Leipzig", "Frankfurt", "Stuttgart", "Düsseldorf", "Bremen", "Wien", "Zürich", "Paris", "London", "Rom", "Madrid", "Lissabon", "Prag", "Amsterdam", "Kopenhagen"],
+      "Filme": ["Titanic", "Avatar", "Inception", "Gladiator", "Joker", "Shrek", "Frozen", "Interstellar", "Matrix", "Rocky", "Batman", "Superman", "Spiderman", "Minions", "Up", "Coco", "Cars", "Aladdin", "Mulan", "Moana"],
+      "Serien": ["Dark", "Friends", "Breaking Bad", "Stranger Things", "The Office", "Wednesday", "Sherlock", "Lupin", "The Crown", "Narcos", "The Boys", "Squid Game", "The Witcher", "Bridgerton", "How I Met Your Mother", "The Mandalorian", "Black Mirror", "Wednesday Addams", "Peaky Blinders", "Haus des Geldes"],
+      "Spiele": ["Schach", "Mensch ärgere dich nicht", "Uno", "Monopoly", "Jenga", "Poker", "Darts", "Tetris", "Minecraft", "Fortnite", "FIFA", "Mario Kart", "Zelda", "Pac-Man", "Siedler", "Skat", "Mau-Mau", "Scrabble", "Domino", "Quiz"],
+      "Pflanzen": ["Rose", "Tulpe", "Sonnenblume", "Kaktus", "Orchidee", "Lavendel", "Efeu", "Bonsai", "Farn", "Moos", "Ahorn", "Eiche", "Birke", "Kiefer", "Palme", "Bambus", "Aloe Vera", "Lilie", "Narzisse", "Geranie"],
+      "Feiertage": ["Weihnachten", "Ostern", "Silvester", "Neujahr", "Karneval", "Halloween", "Valentinstag", "Pfingsten", "Muttertag", "Vatertag", "Nikolaus", "Erntedank", "Tag der Deutschen Einheit", "Heiligabend", "Rosenmontag", "Fasching", "Allerheiligen", "Martinstag", "Advent", "Palmsonntag"],
+      "Emotionen": ["Freude", "Trauer", "Angst", "Wut", "Liebe", "Scham", "Ekel", "Neid", "Stolz", "Hoffnung", "Nervosität", "Eifersucht", "Dankbarkeit", "Erleichterung", "Überraschung", "Langeweile", "Sehnsucht", "Mut", "Frust", "Zufriedenheit"],
+      "Farben": ["Rot", "Blau", "Grün", "Gelb", "Orange", "Lila", "Pink", "Türkis", "Braun", "Schwarz", "Weiß", "Grau", "Beige", "Gold", "Silber", "Mint", "Bordeaux", "Magenta", "Ocker", "Navy"],
+      "Verben": ["laufen", "springen", "tanzen", "lesen", "schreiben", "kochen", "essen", "trinken", "singen", "malen", "bauen", "rechnen", "lachen", "weinen", "reisen", "fahren", "schwimmen", "klettern", "reden", "zuhören"],
+      "Natur": ["Fluss", "See", "Meer", "Wüste", "Vulkan", "Tal", "Wasserfall", "Gletscher", "Höhle", "Kliff", "Wiese", "Sumpf", "Riff", "Dschungel", "Savanne", "Steppe", "Quelle", "Bucht", "Lagune", "Felsen"],
+      "Fantasy": ["Drache", "Zauberer", "Hexe", "Einhorn", "Ritter", "Schloss", "Zauberstab", "Elfe", "Ork", "Magier", "Amulett", "Portal", "Zaubertrank", "Quest", "Gilde", "Zauberspruch", "Königreich", "Mythos", "Kobold", "Dämon"],
+      "Weltraum": ["Sonne", "Mond", "Erde", "Mars", "Venus", "Jupiter", "Saturn", "Uranus", "Neptun", "Stern", "Galaxie", "Komet", "Asteroid", "Rakete", "Raumstation", "Astronaut", "Teleskop", "Orbit", "Milchstraße", "Schwarzes Loch"],
+      "Arbeit": ["Meeting", "Deadline", "Projekt", "Präsentation", "E-Mail", "Kalender", "Team", "Chef", "Büro", "Laptop", "Pause", "Homeoffice", "Report", "Strategie", "Planung", "Angebot", "Kunde", "Feedback", "Fortbildung", "Bewerbung"],
+      "Alltag": ["Wecker", "Dusche", "Frühstück", "Zahnbürste", "Schlüssel", "Geldbeutel", "Einkauf", "Müll", "Waschmaschine", "Staubsauger", "Bahn", "Ampel", "Kiosk", "Post", "Paket", "Rechnung", "Kalender", "Notiz", "Essen kochen", "Abwasch"]
+    };
+
+    const setupScreen = document.getElementById('setup-screen');
+    const revealScreen = document.getElementById('reveal-screen');
+    const resultScreen = document.getElementById('result-screen');
+
+    const playerCountInput = document.getElementById('player-count');
+    const imposterCountInput = document.getElementById('imposter-count');
+    const hintToggle = document.getElementById('hint-toggle');
+    const namesWrapper = document.getElementById('names-wrapper');
+    const setupError = document.getElementById('setup-error');
+
+    const revealPlayer = document.getElementById('reveal-player');
+    const showRoleButton = document.getElementById('show-role');
+    const nextPlayerButton = document.getElementById('next-player');
+    const roleBox = document.getElementById('role-box');
+    const roleMain = document.getElementById('role-main');
+    const roleHint = document.getElementById('role-hint');
+
+    const resultWord = document.getElementById('result-word');
+    const resultCategory = document.getElementById('result-category');
+    const imposterList = document.getElementById('imposter-list');
+
+    const startGameButton = document.getElementById('start-game');
+    const newRoundButton = document.getElementById('new-round');
+
+    let state = {
+      players: [],
+      imposterIndices: [],
+      word: '',
+      category: '',
+      hintEnabled: false,
+      revealIndex: 0,
+      isRoleShown: false
+    };
+
+    function showError(message) {
+      setupError.textContent = message;
+      setupError.classList.remove('hidden');
+    }
+
+    function hideError() {
+      setupError.classList.add('hidden');
+      setupError.textContent = '';
+    }
+
+    function getPlayerCount() {
+      const count = Number(playerCountInput.value);
+      if (Number.isNaN(count)) {
+        return 0;
+      }
+      return Math.max(3, Math.min(30, Math.floor(count)));
+    }
+
+    function renderNameInputs() {
+      const count = getPlayerCount();
+      playerCountInput.value = String(count);
+
+      const previousNames = Array.from(namesWrapper.querySelectorAll('input')).map((input) => input.value.trim());
+
+      let html = '';
+      for (let index = 0; index < count; index += 1) {
+        const fallback = `Spieler ${index + 1}`;
+        const value = previousNames[index] || fallback;
+        html += `<label for="player-name-${index}">Name Spieler ${index + 1}</label>`;
+        html += `<input id="player-name-${index}" type="text" value="${value.replace(/"/g, '&quot;')}">`;
+      }
+      namesWrapper.innerHTML = html;
+
+      const maxImposters = Math.max(1, count - 1);
+      imposterCountInput.max = String(maxImposters);
+      const currentImposters = Number(imposterCountInput.value) || 1;
+      imposterCountInput.value = String(Math.min(Math.max(1, currentImposters), maxImposters));
+    }
+
+    function pickRandomCategoryAndWord() {
+      const categories = Object.keys(WORDS);
+      const category = categories[Math.floor(Math.random() * categories.length)];
+      const words = WORDS[category];
+      const word = words[Math.floor(Math.random() * words.length)];
+      return { category, word };
+    }
+
+    function shuffledIndices(length) {
+      const arr = Array.from({ length }, (_, i) => i);
+      for (let i = arr.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function collectPlayers() {
+      const inputs = Array.from(namesWrapper.querySelectorAll('input'));
+      return inputs.map((input, index) => {
+        const value = input.value.trim();
+        return value || `Spieler ${index + 1}`;
+      });
+    }
+
+    function startGame() {
+      hideError();
+
+      const players = collectPlayers();
+      const playerCount = players.length;
+      const imposterCount = Number(imposterCountInput.value);
+
+      if (playerCount < 3) {
+        showError('Es müssen mindestens 3 Spieler mitspielen.');
+        return;
+      }
+
+      if (!Number.isInteger(imposterCount) || imposterCount < 1 || imposterCount >= playerCount) {
+        showError('Die Imposter-Anzahl muss zwischen 1 und Spielerzahl - 1 liegen.');
+        return;
+      }
+
+      const { category, word } = pickRandomCategoryAndWord();
+      const randomOrder = shuffledIndices(playerCount);
+      const imposterIndices = randomOrder.slice(0, imposterCount);
+
+      state = {
+        players,
+        imposterIndices,
+        word,
+        category,
+        hintEnabled: hintToggle.checked,
+        revealIndex: 0,
+        isRoleShown: false
+      };
+
+      setupScreen.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      revealScreen.classList.remove('hidden');
+      renderRevealScreen();
+    }
+
+    function renderRevealScreen() {
+      const index = state.revealIndex;
+      const name = state.players[index];
+      revealPlayer.textContent = `${name} ist dran`;
+
+      state.isRoleShown = false;
+      roleBox.classList.add('hidden');
+      roleMain.textContent = '';
+      roleHint.textContent = '';
+      showRoleButton.classList.remove('hidden');
+      nextPlayerButton.classList.add('hidden');
+    }
+
+    function showRole() {
+      const index = state.revealIndex;
+      const isImposter = state.imposterIndices.includes(index);
+
+      if (isImposter) {
+        roleMain.textContent = 'Du bist der Imposter';
+        roleHint.textContent = state.hintEnabled
+          ? `Tipp: Die Kategorie ist „${state.category}“.`
+          : 'Du bekommst keinen Tipp zur Kategorie.';
+      } else {
+        roleMain.textContent = `Begriff: ${state.word}`;
+        roleHint.textContent = `Kategorie: ${state.category}`;
+      }
+
+      roleBox.classList.remove('hidden');
+      showRoleButton.classList.add('hidden');
+      nextPlayerButton.classList.remove('hidden');
+      state.isRoleShown = true;
+    }
+
+    function nextStep() {
+      if (!state.isRoleShown) {
+        return;
+      }
+
+      const isLastPlayer = state.revealIndex >= state.players.length - 1;
+      if (!isLastPlayer) {
+        state.revealIndex += 1;
+        renderRevealScreen();
+        return;
+      }
+
+      showResults();
+    }
+
+    function showResults() {
+      revealScreen.classList.add('hidden');
+      resultScreen.classList.remove('hidden');
+
+      resultWord.textContent = state.word;
+      resultCategory.textContent = state.category;
+
+      const names = state.imposterIndices.map((idx) => state.players[idx]);
+      imposterList.innerHTML = names.map((name) => `<li>${name}</li>`).join('');
+    }
+
+    function resetRound() {
+      hideError();
+      setupScreen.classList.remove('hidden');
+      revealScreen.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      renderNameInputs();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    playerCountInput.addEventListener('change', renderNameInputs);
+    playerCountInput.addEventListener('input', renderNameInputs);
+    startGameButton.addEventListener('click', startGame);
+    showRoleButton.addEventListener('click', showRole);
+    nextPlayerButton.addEventListener('click', nextStep);
+    newRoundButton.addEventListener('click', resetRound);
+
+    renderNameInputs();
+  </script>
+</body>
+</html>
