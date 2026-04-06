@@ -162,12 +162,67 @@
     .player-identity .role {
       margin: 0 0 4px;
     }
-    .reveal-status {
-      margin: 0;
+    .reveal-stage {
+      position: relative;
+      min-height: 180px;
+      margin-top: 12px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%);
+      border: 1px solid #e4e4e4;
     }
-    .reveal-timer {
+    .reveal-role-box {
+      margin: 0;
+      min-height: 180px;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .reveal-cover {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 20px;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.3), transparent 45%),
+        linear-gradient(160deg, #222 0%, #444 100%);
+      color: #fff;
+      text-align: center;
+      user-select: none;
+      touch-action: none;
+      transition: transform 180ms ease;
+      cursor: grab;
+    }
+    .reveal-cover.dragging {
+      transition: none;
+      cursor: grabbing;
+    }
+    .reveal-cover.revealed {
+      transform: translateY(-100%);
+    }
+    .reveal-grip {
+      width: 64px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.65);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    .reveal-instruction {
+      margin: 0;
       font-weight: 700;
-      margin-top: 10px;
+      font-size: 1rem;
+    }
+    .reveal-subtext {
+      margin: 0;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.95rem;
     }
     .player-result {
       display: flex;
@@ -198,7 +253,7 @@
 
       <div class="toggle">
         <input id="hint-toggle" type="checkbox">
-        <label for="hint-toggle" style="margin:0;font-weight:600;">Imposter bekommt Kategorie-Tipp</label>
+        <label for="hint-toggle" style="margin:0;font-weight:600;">Kategorie-Hinweis anzeigen</label>
       </div>
 
       <div id="names-wrapper"></div>
@@ -215,19 +270,23 @@
         <img id="reveal-avatar" class="avatar-image" alt="">
         <div class="player-identity-text">
           <p id="reveal-player" class="role"></p>
-          <p id="reveal-status" class="muted reveal-status">Halte den Button kurz gedrückt. Die Rolle wird nur kurz eingeblendet.</p>
         </div>
       </div>
       <p class="muted">Sorge dafür, dass niemand anderes hinschaut.</p>
 
-      <div id="role-box" class="card hidden" style="margin:12px 0 0;">
-        <p id="role-main" class="role"></p>
-        <p id="role-hint" class="hint"></p>
+      <div class="reveal-stage">
+        <div id="role-box" class="card reveal-role-box">
+          <p id="role-main" class="role"></p>
+          <p id="role-hint" class="hint"></p>
+        </div>
+        <div id="reveal-cover" class="reveal-cover" role="button" tabindex="0" aria-label="Nach oben schieben, um die Rolle zu sehen">
+          <div class="reveal-grip"></div>
+          <p id="reveal-instruction" class="reveal-instruction">Block nach oben schieben</p>
+          <p class="reveal-subtext">Darunter versteckt sich die Rolle.</p>
+        </div>
       </div>
-      <p id="reveal-timer" class="muted reveal-timer hidden"></p>
 
       <div class="buttons">
-        <button id="show-role" class="primary">Gedrückt halten zum Aufdecken</button>
         <button id="next-player" class="hidden">Verstanden, weiter</button>
       </div>
     </section>
@@ -301,9 +360,8 @@
 
     const revealPlayer = document.getElementById('reveal-player');
     const revealAvatar = document.getElementById('reveal-avatar');
-    const revealStatus = document.getElementById('reveal-status');
-    const revealTimer = document.getElementById('reveal-timer');
-    const showRoleButton = document.getElementById('show-role');
+    const revealCover = document.getElementById('reveal-cover');
+    const revealInstruction = document.getElementById('reveal-instruction');
     const nextPlayerButton = document.getElementById('next-player');
     const roleBox = document.getElementById('role-box');
     const roleMain = document.getElementById('role-main');
@@ -326,6 +384,13 @@
       hintEnabled: false,
       revealIndex: 0,
       isRoleShown: false
+    };
+
+    let revealDragState = {
+      active: false,
+      pointerId: null,
+      startY: 0,
+      offset: 0
     };
 
     const WORDS_KIDS = {
@@ -359,26 +424,18 @@
       hart: WORDS_HARD
     };
 
-    const AVATAR_STYLES = [
-      { id: 'koralle', label: 'Koralle', colors: ['#ff7b72', '#ffb86b'] },
-      { id: 'lagune', label: 'Lagune', colors: ['#0077b6', '#00b4d8'] },
-      { id: 'beere', label: 'Beere', colors: ['#b5179e', '#ff8fab'] },
-      { id: 'wald', label: 'Wald', colors: ['#386641', '#90be6d'] },
-      { id: 'nacht', label: 'Nacht', colors: ['#2b2d42', '#4361ee'] },
-      { id: 'duene', label: 'Duene', colors: ['#9c6644', '#dda15e'] },
-      { id: 'minze', label: 'Minze', colors: ['#2a9d8f', '#8ecae6'] },
-      { id: 'glut', label: 'Glut', colors: ['#d62828', '#f77f00'] },
-      { id: 'zucker', label: 'Zucker', colors: ['#ff5d8f', '#ffc857'] },
-      { id: 'stahl', label: 'Stahl', colors: ['#495057', '#adb5bd'] },
-      { id: 'pflaume', label: 'Pflaume', colors: ['#6a4c93', '#c77dff'] },
-      { id: 'oase', label: 'Oase', colors: ['#588157', '#a3b18a'] }
+    const ANIMAL_AVATARS = [
+      { id: 'cat', label: 'Katze' },
+      { id: 'fox', label: 'Fuchs' },
+      { id: 'bear', label: 'Baer' },
+      { id: 'rabbit', label: 'Hase' },
+      { id: 'frog', label: 'Frosch' },
+      { id: 'pig', label: 'Schwein' },
+      { id: 'koala', label: 'Koala' },
+      { id: 'tiger', label: 'Tiger' },
+      { id: 'panda', label: 'Panda' },
+      { id: 'owl', label: 'Eule' }
     ];
-    const REVEAL_HOLD_DELAY_MS = 350;
-    const REVEAL_VISIBLE_MS = 4000;
-
-    let revealHoldTimeout = null;
-    let revealAutoHideTimeout = null;
-    let revealCountdownInterval = null;
 
     function showError(message) {
       setupError.textContent = message;
@@ -399,42 +456,176 @@
     }
 
     function getDefaultAvatarId(index) {
-      return AVATAR_STYLES[index % AVATAR_STYLES.length].id;
+      return ANIMAL_AVATARS[index % ANIMAL_AVATARS.length].id;
     }
 
-    function getAvatarStyle(avatarId) {
-      return AVATAR_STYLES.find((style) => style.id === avatarId) || AVATAR_STYLES[0];
+    function getAvatarDefinition(avatarId) {
+      return ANIMAL_AVATARS.find((avatar) => avatar.id === avatarId) || ANIMAL_AVATARS[0];
     }
 
-    function getPlayerInitial(name) {
-      const chars = Array.from((name || '').trim());
-      const alphanumeric = chars.find((char) => /[0-9A-Za-zÄÖÜäöüß]/.test(char));
-      return (alphanumeric || chars[0] || '?').toLocaleUpperCase('de-DE');
+    function getAnimalAvatarSvg(avatarId) {
+      switch (avatarId) {
+        case 'cat':
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#fff3cd"/>
+              <path d="M16 24 24 12 29 25Z" fill="#f4a261"/>
+              <path d="M48 24 40 12 35 25Z" fill="#f4a261"/>
+              <path d="M19 23 24 16 27 24Z" fill="#ffc8dd"/>
+              <path d="M45 23 40 16 37 24Z" fill="#ffc8dd"/>
+              <circle cx="32" cy="35" r="18" fill="#f4a261"/>
+              <circle cx="26" cy="33" r="2.5" fill="#222"/>
+              <circle cx="38" cy="33" r="2.5" fill="#222"/>
+              <ellipse cx="32" cy="40" rx="4.5" ry="3.2" fill="#ffe8d6"/>
+              <path d="M30 39h4" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+              <path d="M32 40v4m0 0c-1 1-2 1.5-3 2m3-2c1 1 2 1.5 3 2" stroke="#222" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            </svg>
+          `;
+        case 'fox':
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#eaf4ff"/>
+              <path d="M14 25 23 11 27 27Z" fill="#f77f00"/>
+              <path d="M50 25 41 11 37 27Z" fill="#f77f00"/>
+              <path d="M19 23 23 17 26 24Z" fill="#fff"/>
+              <path d="M45 23 41 17 38 24Z" fill="#fff"/>
+              <path d="M18 31c3-10 25-13 28 0 3 13-7 21-14 21s-17-8-14-21Z" fill="#f77f00"/>
+              <path d="M22 39c2-6 18-6 20 0-2 6-8 10-10 10s-8-4-10-10Z" fill="#fff"/>
+              <circle cx="26" cy="34" r="2.5" fill="#222"/>
+              <circle cx="38" cy="34" r="2.5" fill="#222"/>
+              <path d="M30 40h4" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          `;
+        case 'bear':
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#f6eee3"/>
+              <circle cx="20" cy="21" r="8" fill="#8d6e63"/>
+              <circle cx="44" cy="21" r="8" fill="#8d6e63"/>
+              <circle cx="20" cy="21" r="4" fill="#caa892"/>
+              <circle cx="44" cy="21" r="4" fill="#caa892"/>
+              <circle cx="32" cy="35" r="18" fill="#8d6e63"/>
+              <circle cx="26" cy="33" r="2.5" fill="#222"/>
+              <circle cx="38" cy="33" r="2.5" fill="#222"/>
+              <ellipse cx="32" cy="40" rx="7" ry="5.5" fill="#caa892"/>
+              <path d="M30 39h4m-2 0v4" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          `;
+        case 'rabbit':
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#eef7ff"/>
+              <rect x="20" y="7" width="8" height="22" rx="4" fill="#ffffff"/>
+              <rect x="36" y="7" width="8" height="22" rx="4" fill="#ffffff"/>
+              <rect x="22" y="11" width="4" height="14" rx="2" fill="#ffc8dd"/>
+              <rect x="38" y="11" width="4" height="14" rx="2" fill="#ffc8dd"/>
+              <circle cx="32" cy="37" r="17" fill="#ffffff"/>
+              <circle cx="26" cy="35" r="2.5" fill="#222"/>
+              <circle cx="38" cy="35" r="2.5" fill="#222"/>
+              <ellipse cx="32" cy="41" rx="5" ry="3.8" fill="#ffd6e0"/>
+              <path d="M32 41v5" stroke="#222" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          `;
+        case 'frog':
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#eefbd5"/>
+              <circle cx="24" cy="24" r="8" fill="#6a994e"/>
+              <circle cx="40" cy="24" r="8" fill="#6a994e"/>
+              <circle cx="32" cy="37" r="18" fill="#6a994e"/>
+              <circle cx="24" cy="24" r="4" fill="#fff"/>
+              <circle cx="40" cy="24" r="4" fill="#fff"/>
+              <circle cx="24" cy="24" r="1.8" fill="#222"/>
+              <circle cx="40" cy="24" r="1.8" fill="#222"/>
+              <path d="M24 42c2 3 14 3 16 0" stroke="#1b4332" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+              <circle cx="28" cy="38" r="1.7" fill="#d9ed92"/>
+              <circle cx="36" cy="38" r="1.7" fill="#d9ed92"/>
+            </svg>
+          `;
+        case 'pig':
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#fff0f5"/>
+              <path d="M17 24 24 15 28 26Z" fill="#ff8fab"/>
+              <path d="M47 24 40 15 36 26Z" fill="#ff8fab"/>
+              <path d="M20 23 24 18 26 24Z" fill="#ffd6e0"/>
+              <path d="M44 23 40 18 38 24Z" fill="#ffd6e0"/>
+              <circle cx="32" cy="35" r="18" fill="#ff8fab"/>
+              <circle cx="26" cy="33" r="2.3" fill="#222"/>
+              <circle cx="38" cy="33" r="2.3" fill="#222"/>
+              <ellipse cx="32" cy="40" rx="7.5" ry="5.5" fill="#ffb3c6"/>
+              <circle cx="29" cy="40" r="1.4" fill="#a4133c"/>
+              <circle cx="35" cy="40" r="1.4" fill="#a4133c"/>
+            </svg>
+          `;
+        case 'koala':
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#edf2f7"/>
+              <circle cx="18" cy="24" r="9" fill="#adb5bd"/>
+              <circle cx="46" cy="24" r="9" fill="#adb5bd"/>
+              <circle cx="18" cy="24" r="4.5" fill="#dfe7ef"/>
+              <circle cx="46" cy="24" r="4.5" fill="#dfe7ef"/>
+              <circle cx="32" cy="35" r="18" fill="#adb5bd"/>
+              <circle cx="26" cy="34" r="2.4" fill="#222"/>
+              <circle cx="38" cy="34" r="2.4" fill="#222"/>
+              <ellipse cx="32" cy="40" rx="5.5" ry="7" fill="#343a40"/>
+            </svg>
+          `;
+        case 'tiger':
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#fff4db"/>
+              <path d="M16 24 24 12 29 25Z" fill="#ff9f1c"/>
+              <path d="M48 24 40 12 35 25Z" fill="#ff9f1c"/>
+              <circle cx="32" cy="35" r="18" fill="#ff9f1c"/>
+              <circle cx="26" cy="34" r="2.4" fill="#222"/>
+              <circle cx="38" cy="34" r="2.4" fill="#222"/>
+              <ellipse cx="32" cy="41" rx="6.5" ry="4.8" fill="#fff"/>
+              <path d="M23 29l-3-5m7 4-3-7m20 8 3-5m-7 4 3-7M30 40h4" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          `;
+        case 'panda':
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#f8f9fa"/>
+              <circle cx="20" cy="21" r="8" fill="#222"/>
+              <circle cx="44" cy="21" r="8" fill="#222"/>
+              <circle cx="32" cy="35" r="18" fill="#fff"/>
+              <ellipse cx="25" cy="34" rx="5" ry="6" fill="#222"/>
+              <ellipse cx="39" cy="34" rx="5" ry="6" fill="#222"/>
+              <circle cx="26" cy="34" r="2" fill="#fff"/>
+              <circle cx="38" cy="34" r="2" fill="#fff"/>
+              <ellipse cx="32" cy="41" rx="5.5" ry="4.5" fill="#222"/>
+            </svg>
+          `;
+        case 'owl':
+        default:
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <rect width="64" height="64" rx="32" fill="#f7efe5"/>
+              <path d="M24 18 28 12 32 18m0 0 4-6 4 6" stroke="#8d5524" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <circle cx="32" cy="36" r="18" fill="#8d5524"/>
+              <circle cx="25" cy="33" r="7" fill="#fff8e7"/>
+              <circle cx="39" cy="33" r="7" fill="#fff8e7"/>
+              <circle cx="25" cy="33" r="2.3" fill="#222"/>
+              <circle cx="39" cy="33" r="2.3" fill="#222"/>
+              <path d="M32 38l-4 4h8Z" fill="#fcbf49"/>
+            </svg>
+          `;
+      }
     }
 
     function getAvatarDataUri(player, size) {
-      const style = getAvatarStyle(player.avatarId);
-      const initial = getPlayerInitial(player.name);
-      const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">
-          <defs>
-            <linearGradient id="grad" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="${style.colors[0]}"/>
-              <stop offset="100%" stop-color="${style.colors[1]}"/>
-            </linearGradient>
-          </defs>
-          <rect width="64" height="64" rx="32" fill="url(#grad)"/>
-          <circle cx="48" cy="16" r="12" fill="rgba(255,255,255,0.18)"/>
-          <circle cx="18" cy="50" r="16" fill="rgba(0,0,0,0.10)"/>
-          <text x="32" y="40" text-anchor="middle" font-size="28" font-family="Arial, sans-serif" font-weight="700" fill="#ffffff">${initial}</text>
-        </svg>
-      `;
-      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const avatar = getAvatarDefinition(player.avatarId);
+      const svg = getAnimalAvatarSvg(avatar.id);
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace('<svg ', `<svg width="${size}" height="${size}" `))}`;
     }
 
     function updateAvatarImage(image, player, size = 56) {
+      const avatar = getAvatarDefinition(player.avatarId);
       image.src = getAvatarDataUri(player, size);
-      image.alt = `Profilbild von ${player.name}`;
+      image.alt = `${avatar.label} als Profilbild von ${player.name}`;
     }
 
     function createAvatarImage(player, small = false) {
@@ -448,10 +639,9 @@
       const rows = Array.from(namesWrapper.querySelectorAll('.player-profile-editor'));
       return rows.map((row, index) => {
         const nameInput = row.querySelector('.player-name-input');
-        const avatarSelect = row.querySelector('.player-avatar-select');
         return {
           name: nameInput ? nameInput.value.trim() : `Spieler ${index + 1}`,
-          avatarId: avatarSelect ? avatarSelect.value : getDefaultAvatarId(index)
+          avatarId: row.dataset.avatarId || getDefaultAvatarId(index)
         };
       });
     }
@@ -462,15 +652,14 @@
       }
 
       const nameInput = row.querySelector('.player-name-input');
-      const avatarSelect = row.querySelector('.player-avatar-select');
       const preview = row.querySelector('.avatar-image');
 
-      if (!nameInput || !avatarSelect || !preview) {
+      if (!nameInput || !preview) {
         return;
       }
 
       const fallbackName = nameInput.value.trim() || nameInput.placeholder || 'Spieler';
-      updateAvatarImage(preview, { name: fallbackName, avatarId: avatarSelect.value }, 56);
+      updateAvatarImage(preview, { name: fallbackName, avatarId: row.dataset.avatarId || getDefaultAvatarId(0) }, 56);
     }
 
     function renderNameInputs() {
@@ -491,6 +680,7 @@
 
         const row = document.createElement('div');
         row.className = 'player-profile-editor';
+        row.dataset.avatarId = player.avatarId;
 
         const previewWrapper = document.createElement('div');
         previewWrapper.className = 'player-profile-preview';
@@ -509,23 +699,11 @@
         nameInput.value = player.name;
         nameInput.placeholder = fallback;
         nameInput.className = 'player-name-input';
+        const avatarNote = document.createElement('p');
+        avatarNote.className = 'muted';
+        avatarNote.textContent = `Avatar: ${getAvatarDefinition(player.avatarId).label}`;
 
-        const avatarLabel = document.createElement('label');
-        avatarLabel.htmlFor = `player-avatar-${index}`;
-        avatarLabel.textContent = 'Profilbild';
-
-        const avatarSelect = document.createElement('select');
-        avatarSelect.id = `player-avatar-${index}`;
-        avatarSelect.className = 'player-avatar-select';
-        AVATAR_STYLES.forEach((style) => {
-          const option = document.createElement('option');
-          option.value = style.id;
-          option.textContent = style.label;
-          option.selected = style.id === player.avatarId;
-          avatarSelect.append(option);
-        });
-
-        fields.append(nameLabel, nameInput, avatarLabel, avatarSelect);
+        fields.append(nameLabel, nameInput, avatarNote);
         row.append(previewWrapper, fields);
         namesWrapper.append(row);
       }
@@ -561,99 +739,107 @@
       }));
     }
 
-    function clearRevealTimers() {
-      if (revealHoldTimeout) {
-        window.clearTimeout(revealHoldTimeout);
-        revealHoldTimeout = null;
-      }
-      if (revealAutoHideTimeout) {
-        window.clearTimeout(revealAutoHideTimeout);
-        revealAutoHideTimeout = null;
-      }
-      if (revealCountdownInterval) {
-        window.clearInterval(revealCountdownInterval);
-        revealCountdownInterval = null;
-      }
-    }
-
-    function fillRoleContent() {
+    function prepareRevealRole() {
       const index = state.revealIndex;
       const isImposter = state.imposterIndices.includes(index);
 
       if (isImposter) {
         roleMain.textContent = 'Du bist der Imposter';
-        roleHint.textContent = state.hintEnabled
-          ? `Tipp: Die Kategorie ist „${state.category}“.`
-          : 'Du bekommst keinen Tipp zur Kategorie.';
       } else {
         roleMain.textContent = `Begriff: ${state.word}`;
-        roleHint.textContent = `Kategorie: ${state.category}`;
       }
 
-      roleBox.classList.remove('hidden');
+      if (state.hintEnabled) {
+        roleHint.classList.remove('hidden');
+        roleHint.textContent = isImposter
+          ? `Tipp: Die Kategorie ist „${state.category}“.`
+          : `Kategorie: ${state.category}`;
+      } else {
+        roleHint.textContent = '';
+        roleHint.classList.add('hidden');
+      }
     }
 
-    function updateRevealCountdown(remainingMs) {
-      const secondsRemaining = Math.max(1, Math.ceil(remainingMs / 1000));
-      revealTimer.textContent = `Noch ${secondsRemaining} Sekunde${secondsRemaining === 1 ? '' : 'n'} sichtbar.`;
+    function resetRevealCover() {
+      revealDragState = {
+        active: false,
+        pointerId: null,
+        startY: 0,
+        offset: 0
+      };
+      revealCover.style.transform = 'translateY(0px)';
+      revealCover.classList.remove('dragging', 'revealed');
+      revealInstruction.textContent = 'Block nach oben schieben';
     }
 
-    function finishRolePeek() {
-      clearRevealTimers();
-      roleBox.classList.add('hidden');
-      revealTimer.classList.add('hidden');
-      revealTimer.textContent = '';
-      showRoleButton.classList.add('hidden');
+    function completeReveal() {
+      revealDragState.active = false;
+      revealDragState.pointerId = null;
+      revealDragState.offset = 0;
+      revealCover.classList.remove('dragging');
+      revealCover.style.transform = '';
+      revealCover.classList.add('revealed');
+      revealInstruction.textContent = 'Aufgedeckt';
       nextPlayerButton.classList.remove('hidden');
-      revealStatus.textContent = 'Rolle wieder verborgen. Gib das Handy weiter und tippe dann auf Weiter.';
       state.isRoleShown = true;
     }
 
-    function revealRoleTemporarily() {
-      fillRoleContent();
-      showRoleButton.classList.add('hidden');
-      nextPlayerButton.classList.add('hidden');
-      revealStatus.textContent = 'Nur fuer dich: Praege dir die Rolle ein, danach verschwindet sie wieder.';
-      revealTimer.classList.remove('hidden');
-      updateRevealCountdown(REVEAL_VISIBLE_MS);
-
-      const startedAt = Date.now();
-      revealCountdownInterval = window.setInterval(() => {
-        const remainingMs = REVEAL_VISIBLE_MS - (Date.now() - startedAt);
-        if (remainingMs > 0) {
-          updateRevealCountdown(remainingMs);
-        }
-      }, 200);
-      revealAutoHideTimeout = window.setTimeout(finishRolePeek, REVEAL_VISIBLE_MS);
+    function getRevealThreshold() {
+      return Math.max(72, Math.min(140, revealCover.offsetHeight * 0.42));
     }
 
-    function handleRevealStart() {
-      if (state.isRoleShown || revealHoldTimeout || revealAutoHideTimeout) {
+    function handleRevealPointerDown(event) {
+      if (state.isRoleShown) {
         return;
       }
 
-      showRoleButton.textContent = 'Halten...';
-      revealStatus.textContent = 'Kurz weiter gedrueckt halten, dann erscheint deine Rolle.';
-      revealHoldTimeout = window.setTimeout(() => {
-        revealHoldTimeout = null;
-        revealRoleTemporarily();
-      }, REVEAL_HOLD_DELAY_MS);
+      revealDragState.active = true;
+      revealDragState.pointerId = event.pointerId;
+      revealDragState.startY = event.clientY;
+      revealDragState.offset = 0;
+      revealCover.classList.add('dragging');
+      if (typeof revealCover.setPointerCapture === 'function') {
+        revealCover.setPointerCapture(event.pointerId);
+      }
     }
 
-    function handleRevealCancel() {
-      if (!revealHoldTimeout || state.isRoleShown || revealAutoHideTimeout) {
+    function handleRevealPointerMove(event) {
+      if (!revealDragState.active || event.pointerId !== revealDragState.pointerId || state.isRoleShown) {
         return;
       }
 
-      window.clearTimeout(revealHoldTimeout);
-      revealHoldTimeout = null;
-      showRoleButton.textContent = 'Gedrückt halten zum Aufdecken';
-      revealStatus.textContent = 'Halte den Button kurz gedrückt. Die Rolle wird nur kurz eingeblendet.';
+      const upwardDistance = Math.max(0, revealDragState.startY - event.clientY);
+      const clampedDistance = Math.min(upwardDistance, revealCover.offsetHeight);
+      revealDragState.offset = clampedDistance;
+      revealCover.style.transform = `translateY(${-clampedDistance}px)`;
+    }
+
+    function handleRevealPointerEnd(event) {
+      if (!revealDragState.active || event.pointerId !== revealDragState.pointerId) {
+        return;
+      }
+
+      revealCover.classList.remove('dragging');
+      if (revealDragState.offset >= getRevealThreshold()) {
+        completeReveal();
+      } else {
+        resetRevealCover();
+      }
+    }
+
+    function handleRevealKeydown(event) {
+      if (state.isRoleShown) {
+        return;
+      }
+
+      if (event.key === 'ArrowUp' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        completeReveal();
+      }
     }
 
     function startGame() {
       hideError();
-      clearRevealTimers();
 
       const players = collectPlayers();
       const playerCount = players.length;
@@ -693,22 +879,15 @@
     }
 
     function renderRevealScreen() {
-      clearRevealTimers();
       const index = state.revealIndex;
       const player = state.players[index];
       revealPlayer.textContent = `${player.name} ist dran`;
       updateAvatarImage(revealAvatar, player, 56);
 
       state.isRoleShown = false;
-      roleBox.classList.add('hidden');
-      roleMain.textContent = '';
-      roleHint.textContent = '';
-      revealStatus.textContent = 'Halte den Button kurz gedrückt. Die Rolle wird nur kurz eingeblendet.';
-      revealTimer.textContent = '';
-      revealTimer.classList.add('hidden');
-      showRoleButton.textContent = 'Gedrückt halten zum Aufdecken';
-      showRoleButton.disabled = false;
-      showRoleButton.classList.remove('hidden');
+      prepareRevealRole();
+      roleBox.classList.remove('hidden');
+      resetRevealCover();
       nextPlayerButton.classList.add('hidden');
     }
 
@@ -728,7 +907,6 @@
     }
 
     function showPreResults() {
-      clearRevealTimers();
       revealScreen.classList.add('hidden');
       preResultScreen.classList.remove('hidden');
     }
@@ -759,7 +937,6 @@
 
     function resetRound() {
       hideError();
-      clearRevealTimers();
       setupScreen.classList.remove('hidden');
       revealScreen.classList.add('hidden');
       preResultScreen.classList.add('hidden');
@@ -777,10 +954,11 @@
       syncProfilePreview(event.target.closest('.player-profile-editor'));
     });
     startGameButton.addEventListener('click', startGame);
-    showRoleButton.addEventListener('pointerdown', handleRevealStart);
-    showRoleButton.addEventListener('pointerup', handleRevealCancel);
-    showRoleButton.addEventListener('pointerleave', handleRevealCancel);
-    showRoleButton.addEventListener('pointercancel', handleRevealCancel);
+    revealCover.addEventListener('pointerdown', handleRevealPointerDown);
+    revealCover.addEventListener('pointermove', handleRevealPointerMove);
+    revealCover.addEventListener('pointerup', handleRevealPointerEnd);
+    revealCover.addEventListener('pointercancel', handleRevealPointerEnd);
+    revealCover.addEventListener('keydown', handleRevealKeydown);
     nextPlayerButton.addEventListener('click', nextStep);
     showResultsButton.addEventListener('click', showResults);
     newRoundButton.addEventListener('click', resetRound);
