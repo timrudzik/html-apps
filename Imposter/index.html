@@ -29,6 +29,12 @@
         linear-gradient(180deg, #f8f2e8 0%, #efe3d5 100%);
       color: var(--ink);
     }
+    body.adult-mode {
+      background:
+        radial-gradient(circle at 18% 0%, rgba(214, 15, 66, 0.42), transparent 38%),
+        radial-gradient(circle at 86% 10%, rgba(145, 18, 44, 0.35), transparent 40%),
+        linear-gradient(180deg, #27000d 0%, #130208 55%, #060103 100%);
+    }
     .container {
       max-width: 720px;
       margin: 0 auto;
@@ -1203,16 +1209,24 @@
     playerCountInput.addEventListener('input', renderNameInputs);
     adultToggle.addEventListener('change', () => {
       const allowAdult = adultToggle.checked;
+      if (allowAdult) {
+        const ageConfirmed = window.confirm('Bist du wirklich über 18 Jahre alt?');
+        if (!ageConfirmed) {
+          adultToggle.checked = false;
+        }
+      }
+      const shouldEnableAdult = adultToggle.checked;
       Array.from(specialPackSelect.options).forEach((option) => {
         if (!option.value.startsWith('schmuddel')) {
           return;
         }
-        option.disabled = !allowAdult;
+        option.disabled = !shouldEnableAdult;
       });
 
-      if (!allowAdult && specialPackSelect.value.startsWith('schmuddel')) {
+      if (!shouldEnableAdult && specialPackSelect.value.startsWith('schmuddel')) {
         specialPackSelect.value = 'none';
       }
+      document.body.classList.toggle('adult-mode', shouldEnableAdult);
     });
     namesWrapper.addEventListener('input', (event) => {
       syncProfilePreview(event.target.closest('.player-profile-editor'));
