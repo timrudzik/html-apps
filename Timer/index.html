@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Timer</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 24px;
+      text-align: center;
+    }
+    #display {
+      font-size: 3rem;
+      margin: 20px 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 12px 16px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      background: #f5f5f5;
+      min-width: 90px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Timer</h1>
+  <div id="display">00:00</div>
+  <div class="buttons">
+    <button id="start">Start</button>
+    <button id="stop">Stopp</button>
+    <button id="reset">Reset</button>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    const startButton = document.getElementById('start');
+    const stopButton = document.getElementById('stop');
+    const resetButton = document.getElementById('reset');
+
+    let seconds = 0;
+    let intervalId = null;
+
+    function render() {
+      const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const secs = String(seconds % 60).padStart(2, '0');
+      display.textContent = `${mins}:${secs}`;
+    }
+
+    startButton.addEventListener('click', () => {
+      if (intervalId !== null) {
+        return;
+      }
+      intervalId = setInterval(() => {
+        seconds += 1;
+        render();
+      }, 1000);
+    });
+
+    stopButton.addEventListener('click', () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    });
+
+    resetButton.addEventListener('click', () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      seconds = 0;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

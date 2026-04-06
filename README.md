@@ -12,6 +12,8 @@ Beispiel:
 	index.html        <- Startseite mit Links zu allen Apps
 	/Test
 		index.html      <- eine einzelne Mini-App
+	/Timer
+		index.html
 	/AndereApp
 		index.html
 ```
