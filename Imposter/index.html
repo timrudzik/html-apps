@@ -478,7 +478,9 @@
 
       <div class="buttons">
         <button id="start-game" class="primary">Spiel starten</button>
+        <button id="reset-used-words" type="button">Reset Wörter-Historie</button>
       </div>
+      <p id="used-words-status" class="muted" style="margin-top:12px;"></p>
       <p id="setup-error" class="error hidden"></p>
     </section>
 
@@ -579,6 +581,8 @@
     const adultToggle = document.getElementById('adult-toggle');
     const namesWrapper = document.getElementById('names-wrapper');
     const setupError = document.getElementById('setup-error');
+    const resetUsedWordsButton = document.getElementById('reset-used-words');
+    const usedWordsStatus = document.getElementById('used-words-status');
 
     const revealPlayer = document.getElementById('reveal-player');
     const revealProgress = document.getElementById('reveal-progress');
@@ -596,6 +600,7 @@
 
     const startGameButton = document.getElementById('start-game');
     const newRoundButton = document.getElementById('new-round');
+    const USED_WORDS_STORAGE_KEY = 'imposter.usedWords.v1';
 
     let state = {
       players: [],
@@ -682,6 +687,67 @@
       { id: 'panda', label: 'Panda' },
       { id: 'owl', label: 'Eule' }
     ];
+
+    function loadUsedWordsStore() {
+      try {
+        const rawStore = window.localStorage.getItem(USED_WORDS_STORAGE_KEY);
+        if (!rawStore) {
+          return {};
+        }
+        const parsedStore = JSON.parse(rawStore);
+        if (!parsedStore || typeof parsedStore !== 'object' || Array.isArray(parsedStore)) {
+          return {};
+        }
+        const sanitizedStore = {};
+        Object.entries(parsedStore).forEach(([storeKey, words]) => {
+          if (!Array.isArray(words)) {
+            return;
+          }
+          sanitizedStore[storeKey] = words.filter((word) => typeof word === 'string');
+        });
+        return sanitizedStore;
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveUsedWordsStore(store) {
+      window.localStorage.setItem(USED_WORDS_STORAGE_KEY, JSON.stringify(store));
+    }
+
+    function getSelectionStoreKey(wordPack, specialPack, adultContentEnabled) {
+      const activePack = specialPack !== 'none' ? specialPack : wordPack;
+      return `${activePack}::${adultContentEnabled ? 'adult-on' : 'adult-off'}`;
+    }
+
+    function getCombinedWordPool(wordPack, specialPack, adultContentEnabled) {
+      let selectedPack = WORD_PACKS[wordPack] || WORD_PACKS.standard;
+      const specialSelection = SPECIAL_WORD_PACKS[specialPack];
+      const isAdultSpecial = typeof specialPack === 'string' && specialPack.startsWith('schmuddel');
+      const canUseAdultSpecial = !isAdultSpecial || adultContentEnabled;
+      if (specialSelection && canUseAdultSpecial) {
+        selectedPack = specialSelection;
+      }
+
+      const entries = [];
+      Object.entries(selectedPack).forEach(([category, words]) => {
+        words.forEach((word) => {
+          entries.push({ category, word });
+        });
+      });
+      return entries;
+    }
+
+    function updateUsedWordsStatus() {
+      const selectedWordPack = wordPackSelect.value;
+      const selectedSpecialPack = specialPackSelect.value;
+      const adultContentEnabled = adultToggle.checked;
+      const storeKey = getSelectionStoreKey(selectedWordPack, selectedSpecialPack, adultContentEnabled);
+      const usedWordsStore = loadUsedWordsStore();
+      const usedWords = usedWordsStore[storeKey] || [];
+      const totalWords = getCombinedWordPool(selectedWordPack, selectedSpecialPack, adultContentEnabled).length;
+      usedWordsStatus.textContent = `Wörter-Historie: ${usedWords.length} von ${totalWords} Begriffen verbraucht.`;
+    }
 
     function showError(message) {
       setupError.textContent = message;
@@ -961,18 +1027,22 @@
     }
 
     function pickRandomCategoryAndWord(wordPack, specialPack, adultContentEnabled) {
-      let selectedPack = WORD_PACKS[wordPack] || WORD_PACKS.standard;
-      const specialSelection = SPECIAL_WORD_PACKS[specialPack];
-      const isAdultSpecial = typeof specialPack === 'string' && specialPack.startsWith('schmuddel');
-      const canUseAdultSpecial = !isAdultSpecial || adultContentEnabled;
-      if (specialSelection && canUseAdultSpecial) {
-        selectedPack = specialSelection;
+      const storeKey = getSelectionStoreKey(wordPack, specialPack, adultContentEnabled);
+      const usedWordsStore = loadUsedWordsStore();
+      const usedWords = new Set(usedWordsStore[storeKey] || []);
+      const wordPool = getCombinedWordPool(wordPack, specialPack, adultContentEnabled);
+      const availableWords = wordPool.filter(({ word }) => !usedWords.has(word));
+
+      if (availableWords.length === 0) {
+        return null;
       }
-      const categories = Object.keys(selectedPack);
-      const category = categories[Math.floor(Math.random() * categories.length)];
-      const words = selectedPack[category];
-      const word = words[Math.floor(Math.random() * words.length)];
-      return { category, word };
+
+      const selection = availableWords[Math.floor(Math.random() * availableWords.length)];
+      usedWords.add(selection.word);
+      usedWordsStore[storeKey] = Array.from(usedWords);
+      saveUsedWordsStore(usedWordsStore);
+      updateUsedWordsStatus();
+      return selection;
     }
 
     function shuffledIndices(length) {
@@ -1120,7 +1190,12 @@
         return;
       }
 
-      const { category, word } = pickRandomCategoryAndWord(selectedWordPack, selectedSpecialPack, adultContentEnabled);
+      const selectedWord = pickRandomCategoryAndWord(selectedWordPack, selectedSpecialPack, adultContentEnabled);
+      if (!selectedWord) {
+        showError('Alle Begriffe für diese Auswahl wurden bereits genutzt. Bitte Wörter-Historie resetten.');
+        return;
+      }
+      const { category, word } = selectedWord;
       const randomOrder = shuffledIndices(playerCount);
       const imposterIndices = randomOrder.slice(0, imposterCount);
 
@@ -1202,11 +1277,19 @@
       revealScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
       renderNameInputs();
+      updateUsedWordsStatus();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetUsedWordsHistory() {
+      window.localStorage.removeItem(USED_WORDS_STORAGE_KEY);
+      updateUsedWordsStatus();
     }
 
     playerCountInput.addEventListener('change', renderNameInputs);
     playerCountInput.addEventListener('input', renderNameInputs);
+    wordPackSelect.addEventListener('change', updateUsedWordsStatus);
+    specialPackSelect.addEventListener('change', updateUsedWordsStatus);
     adultToggle.addEventListener('change', () => {
       const allowAdult = adultToggle.checked;
       if (allowAdult) {
@@ -1227,6 +1310,7 @@
         specialPackSelect.value = 'none';
       }
       document.body.classList.toggle('adult-mode', shouldEnableAdult);
+      updateUsedWordsStatus();
     });
     namesWrapper.addEventListener('input', (event) => {
       syncProfilePreview(event.target.closest('.player-profile-editor'));
@@ -1242,9 +1326,11 @@
     revealCover.addEventListener('keydown', handleRevealKeydown);
     nextPlayerButton.addEventListener('click', nextStep);
     newRoundButton.addEventListener('click', resetRound);
+    resetUsedWordsButton.addEventListener('click', resetUsedWordsHistory);
 
     renderNameInputs();
     adultToggle.dispatchEvent(new Event('change'));
+    updateUsedWordsStatus();
   </script>
 </body>
 </html>
