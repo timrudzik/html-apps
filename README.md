@@ -40,3 +40,34 @@ Beispiele:
 
 Safari öffnen -> URL aufrufen -> Teilen -> `Zum Home-Bildschirm`.
 So fühlt sich jede App fast wie eine native App an.
+
+## KI-generierte Animationen sinnvoll einbringen
+
+Wenn du KI-Animationen einbauen willst, sind diese Stellen in diesem Repo am sinnvollsten:
+
+1. **Startseite (`/index.html`)**
+   - Nutze eine kurze, dezente Hero-Animation (z. B. abstrakter Loop oder animierter Hintergrund), um das Projekt lebendiger zu machen.
+   - Wichtig: klein halten (komprimiertes MP4/WebM oder Lottie), damit die Seite schnell bleibt.
+
+2. **`/Imposter` (spielerisch + Story)**
+   - Hier passen KI-Animationen am besten, weil die App bereits ein visuelles, thematisches UI hat.
+   - Gute Einsatzpunkte:
+     - Intro beim Start einer Runde
+     - Reveal-Moment für Rollen
+     - kurzer Übergang bei Moduswechseln
+
+3. **`/Timer` (funktional + Fokus)**
+   - Animationen sollten hier eher „informativ“ sein:
+     - sanfte Puls-/Glow-Effekte bei Countdown-Ende
+     - kurze Success-/Alert-Animationen statt Dauer-Loop
+   - Ziel: Feedback geben, ohne die Lesbarkeit zu stören.
+
+4. **`/Test` (Experimentierfläche)**
+   - Perfekt als Sandbox, um neue KI-generierte Assets zu testen (Format, Ladezeit, mobile Performance), bevor du sie in produktive Apps übernimmst.
+
+### Praktische Leitlinien
+
+- **Priorität auf Performance:** Für mobile Nutzung lieber kurze Loops, lazy loading und reduzierte Auflösung.
+- **Formatwahl:** Für Illustrationen eher Lottie/SVG, für cineastische Sequenzen eher komprimiertes MP4/WebM.
+- **Barrierefreiheit:** Optionalen „Animationen reduzieren“-Schalter anbieten (`prefers-reduced-motion` beachten).
+- **Stil-Konsistenz:** Pro App nur 1 visueller Animationsstil, damit es nicht unruhig wirkt.
