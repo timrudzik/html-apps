@@ -168,6 +168,15 @@
       </div>
     </section>
 
+    <section id="pre-result-screen" class="card hidden">
+      <h2>Auflösung bereit</h2>
+      <p>Alle Rollen wurden angesehen.</p>
+      <p class="muted">Tippe auf den Button, um die tatsächliche Auflösung zu zeigen.</p>
+      <div class="buttons">
+        <button id="show-results" class="primary">Auflösung anzeigen</button>
+      </div>
+    </section>
+
     <section id="result-screen" class="card hidden">
       <h2>Auflösung</h2>
       <p><strong>Gesuchter Begriff:</strong> <span id="result-word"></span></p>
@@ -216,6 +225,7 @@
 
     const setupScreen = document.getElementById('setup-screen');
     const revealScreen = document.getElementById('reveal-screen');
+    const preResultScreen = document.getElementById('pre-result-screen');
     const resultScreen = document.getElementById('result-screen');
 
     const playerCountInput = document.getElementById('player-count');
@@ -237,6 +247,7 @@
     const imposterList = document.getElementById('imposter-list');
 
     const startGameButton = document.getElementById('start-game');
+    const showResultsButton = document.getElementById('show-results');
     const newRoundButton = document.getElementById('new-round');
 
     let state = {
@@ -382,6 +393,7 @@
       };
 
       setupScreen.classList.add('hidden');
+      preResultScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
       revealScreen.classList.remove('hidden');
       renderRevealScreen();
@@ -432,11 +444,16 @@
         return;
       }
 
-      showResults();
+      showPreResults();
+    }
+
+    function showPreResults() {
+      revealScreen.classList.add('hidden');
+      preResultScreen.classList.remove('hidden');
     }
 
     function showResults() {
-      revealScreen.classList.add('hidden');
+      preResultScreen.classList.add('hidden');
       resultScreen.classList.remove('hidden');
 
       resultWord.textContent = state.word;
@@ -450,6 +467,7 @@
       hideError();
       setupScreen.classList.remove('hidden');
       revealScreen.classList.add('hidden');
+      preResultScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
       renderNameInputs();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -460,6 +478,7 @@
     startGameButton.addEventListener('click', startGame);
     showRoleButton.addEventListener('click', showRole);
     nextPlayerButton.addEventListener('click', nextStep);
+    showResultsButton.addEventListener('click', showResults);
     newRoundButton.addEventListener('click', resetRound);
 
     renderNameInputs();
