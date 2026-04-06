@@ -417,7 +417,7 @@
   <div class="container">
     <header class="hero">
       <p class="eyebrow">Social Deduction</p>
-      <h1>Imposter <span class="version-tag">V0.7</span></h1>
+      <h1>Imposter <span class="version-tag">V0.8</span></h1>
       <p class="section-copy" style="color:rgba(255,244,232,0.82);margin-bottom:0;">Schnell gestartet, herrlich verdächtig und perfekt für eine Runde am Handy.</p>
     </header>
 
@@ -445,9 +445,27 @@
         </div>
       </div>
 
+      <div class="field" style="margin-top:12px;">
+        <label for="special-pack">Special-Themenpaket (optional)</label>
+        <select id="special-pack">
+          <option value="none" selected>Keins</option>
+          <option value="nerd-gaming">Nerd: Gaming</option>
+          <option value="nerd-anime">Nerd: Anime & Manga</option>
+          <option value="nerd-scifi">Nerd: Sci‑Fi & Fantasy</option>
+          <option value="nerd-tech">Nerd: Coding & Tech</option>
+          <option value="schmuddel-flirty">18+: Schmuddel (Flirty)</option>
+          <option value="schmuddel-spicy">18+: Schmuddel (Spicy)</option>
+        </select>
+      </div>
+
       <div class="toggle">
         <input id="hint-toggle" type="checkbox">
         <label for="hint-toggle" style="margin:0;font-weight:600;">Kategorie-Hinweis anzeigen</label>
+      </div>
+
+      <div class="toggle" style="margin-top:0;">
+        <input id="adult-toggle" type="checkbox">
+        <label for="adult-toggle" style="margin:0;font-weight:600;">18+ Inhalte erlauben</label>
       </div>
 
       <div id="names-wrapper"></div>
@@ -550,7 +568,9 @@
     const playerCountInput = document.getElementById('player-count');
     const imposterCountInput = document.getElementById('imposter-count');
     const wordPackSelect = document.getElementById('word-pack');
+    const specialPackSelect = document.getElementById('special-pack');
     const hintToggle = document.getElementById('hint-toggle');
+    const adultToggle = document.getElementById('adult-toggle');
     const namesWrapper = document.getElementById('names-wrapper');
     const setupError = document.getElementById('setup-error');
 
@@ -577,7 +597,9 @@
       word: '',
       category: '',
       wordPack: 'standard',
+      specialPack: 'none',
       hintEnabled: false,
+      adultContentEnabled: false,
       revealIndex: 0,
       isRoleShown: false
     };
@@ -619,6 +641,27 @@
       kinder: WORDS_KIDS,
       standard: WORDS,
       hart: WORDS_HARD
+    };
+
+    const SPECIAL_WORD_PACKS = {
+      "nerd-gaming": {
+        "Nerd · Gaming": ["Bossfight", "Speedrun", "Cooldown", "Respawn", "Hitbox", "Loot", "Patchnotes", "Skilltree", "Nerf", "Buff", "Guild", "Raid", "Checkpoint", "Quicksave", "Crafting", "PvP", "Questlog", "Achievement", "Minimap", "Cutscene"]
+      },
+      "nerd-anime": {
+        "Nerd · Anime & Manga": ["Shonen", "Isekai", "Senpai", "Manga", "Mecha", "Cosplay", "Opening", "Ending", "Chibi", "Arc", "Antagonist", "Fanservice", "Cliffhanger", "Bento", "Dojo", "Powerup", "Rivale", "Tournament", "Transformation", "Kawaii"]
+      },
+      "nerd-scifi": {
+        "Nerd · Sci‑Fi & Fantasy": ["Warpantrieb", "Raumschiff", "Portal", "Teleportation", "Cyberdeck", "Droid", "Lichtschwert", "Mana", "Drachenhort", "Elbenrat", "Runenstein", "Zeitreise", "Paralleluniversum", "Hologramm", "Hyperraum", "Artefakt", "Schattenklinge", "Magiergilde", "Dungeon", "Weltenbaum"]
+      },
+      "nerd-tech": {
+        "Nerd · Coding & Tech": ["API", "Repository", "Commit", "Merge-Konflikt", "Hotfix", "Deploy", "Docker", "Webhook", "Cache", "Backend", "Frontend", "Datenbank", "Refactoring", "Code-Review", "Pull-Request", "Latenz", "Syntax", "Runtime", "Feature-Flag", "Terminal"]
+      },
+      "schmuddel-flirty": {
+        "Schmuddel · Flirty (18+)": ["Date Night", "Flirt", "Doppeldeutig", "Knistern", "Verführung", "Blickkontakt", "Nachricht um Mitternacht", "Lippenstift", "Heimliches Lächeln", "Kompliment", "Afterparty", "Verabredung", "Late-Night-Call", "Parfüm", "Privatchat", "Herzklopfen", "Anmachen", "Augenzwinkern", "Sexy Stimme", "Kerzenschein"]
+      },
+      "schmuddel-spicy": {
+        "Schmuddel · Spicy (18+)": ["Liebesnest", "Peitsche", "Handschelle", "Dessous", "Striptease", "Dirty Talk", "Fesselspiel", "Rollenspiel", "Kussattacke", "Massageöl", "Seidenbett", "Verbotene Fantasie", "Hotelzimmer", "Mitternachtsdate", "Stöhnkonzert", "Scharfer Blick", "Afterglow", "Verführerisch", "Nachtprogramm", "Spicy Secret"]
+      }
     };
 
     const ANIMAL_AVATARS = [
@@ -911,8 +954,14 @@
       imposterCountInput.value = String(Math.min(Math.max(1, currentImposters), maxImposters));
     }
 
-    function pickRandomCategoryAndWord(wordPack) {
-      const selectedPack = WORD_PACKS[wordPack] || WORD_PACKS.standard;
+    function pickRandomCategoryAndWord(wordPack, specialPack, adultContentEnabled) {
+      let selectedPack = WORD_PACKS[wordPack] || WORD_PACKS.standard;
+      const specialSelection = SPECIAL_WORD_PACKS[specialPack];
+      const isAdultSpecial = typeof specialPack === 'string' && specialPack.startsWith('schmuddel');
+      const canUseAdultSpecial = !isAdultSpecial || adultContentEnabled;
+      if (specialSelection && canUseAdultSpecial) {
+        selectedPack = specialSelection;
+      }
       const categories = Object.keys(selectedPack);
       const category = categories[Math.floor(Math.random() * categories.length)];
       const words = selectedPack[category];
@@ -1052,6 +1101,8 @@
       const playerCount = players.length;
       const imposterCount = Number(imposterCountInput.value);
       const selectedWordPack = wordPackSelect.value;
+      const selectedSpecialPack = specialPackSelect.value;
+      const adultContentEnabled = adultToggle.checked;
 
       if (playerCount < 3) {
         showError('Es müssen mindestens 3 Spieler mitspielen.');
@@ -1063,7 +1114,7 @@
         return;
       }
 
-      const { category, word } = pickRandomCategoryAndWord(selectedWordPack);
+      const { category, word } = pickRandomCategoryAndWord(selectedWordPack, selectedSpecialPack, adultContentEnabled);
       const randomOrder = shuffledIndices(playerCount);
       const imposterIndices = randomOrder.slice(0, imposterCount);
 
@@ -1073,7 +1124,9 @@
         word,
         category,
         wordPack: selectedWordPack,
+        specialPack: selectedSpecialPack,
         hintEnabled: hintToggle.checked,
+        adultContentEnabled,
         revealIndex: 0,
         isRoleShown: false
       };
@@ -1148,6 +1201,19 @@
 
     playerCountInput.addEventListener('change', renderNameInputs);
     playerCountInput.addEventListener('input', renderNameInputs);
+    adultToggle.addEventListener('change', () => {
+      const allowAdult = adultToggle.checked;
+      Array.from(specialPackSelect.options).forEach((option) => {
+        if (!option.value.startsWith('schmuddel')) {
+          return;
+        }
+        option.disabled = !allowAdult;
+      });
+
+      if (!allowAdult && specialPackSelect.value.startsWith('schmuddel')) {
+        specialPackSelect.value = 'none';
+      }
+    });
     namesWrapper.addEventListener('input', (event) => {
       syncProfilePreview(event.target.closest('.player-profile-editor'));
     });
@@ -1164,6 +1230,7 @@
     newRoundButton.addEventListener('click', resetRound);
 
     renderNameInputs();
+    adultToggle.dispatchEvent(new Event('change'));
   </script>
 </body>
 </html>
