@@ -69,6 +69,21 @@
       font-size: clamp(2.2rem, 5vw, 3.35rem);
       line-height: 0.94;
       letter-spacing: -0.04em;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .version-tag {
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 245, 230, 0.94);
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 4px 9px;
+      border-radius: 999px;
     }
     h2 {
       margin-top: 0;
@@ -402,7 +417,7 @@
   <div class="container">
     <header class="hero">
       <p class="eyebrow">Social Deduction</p>
-      <h1>Imposter</h1>
+      <h1>Imposter <span class="version-tag">V0.7</span></h1>
       <p class="section-copy" style="color:rgba(255,244,232,0.82);margin-bottom:0;">Schnell gestartet, herrlich verdächtig und perfekt für eine Runde am Handy.</p>
     </header>
 
@@ -497,15 +512,15 @@
 
   <script>
     const WORDS = {
-      "Tiere": ["Hund", "Katze", "Maus", "Elefant", "Giraffe", "Pinguin", "Delfin", "Wal", "Krokodil", "Schildkröte", "Zebra", "Löwe", "Tiger", "Bär", "Wolf", "Fuchs", "Hase", "Igel", "Eule", "Papagei"],
-      "Berufe": ["Arzt", "Lehrer", "Pilot", "Feuerwehrmann", "Polizist", "Bäcker", "Koch", "Journalist", "Programmierer", "Architekt", "Zahnarzt", "Friseur", "Elektriker", "Mechaniker", "Richter", "Anwalt", "Kellner", "Fotograf", "Florist", "Tierarzt"],
-      "Essen": ["Pizza", "Burger", "Spaghetti", "Sushi", "Salat", "Brot", "Käse", "Suppe", "Steak", "Apfel", "Banane", "Erdbeere", "Schokolade", "Kuchen", "Kartoffel", "Reis", "Omelett", "Lasagne", "Pfannkuchen", "Döner"],
+      "Tiere": ["Hund", "Katze", "Maus", "Elefant", "Giraffe", "Pinguin", "Delfin", "Wal", "Krokodil", "Schildkröte", "Zebra", "Löwe", "Tiger", "Bär", "Wolf", "Fuchs", "Hase", "Igel", "Eule", "Papagei", "Otter", "Alpaka", "Chamäleon", "Panther", "Nashorn", "Erdmännchen", "Seehund", "Faultier", "Waschbär", "Pfau"],
+      "Berufe": ["Arzt", "Lehrer", "Pilot", "Feuerwehrmann", "Polizist", "Bäcker", "Koch", "Journalist", "Programmierer", "Architekt", "Zahnarzt", "Friseur", "Elektriker", "Mechaniker", "Richter", "Anwalt", "Kellner", "Fotograf", "Florist", "Tierarzt", "Astronaut", "Schauspieler", "Designer", "Gärtner", "Physiotherapeut", "Erzieher", "Apotheker", "Lokführer", "Handwerker", "Musiker"],
+      "Essen": ["Pizza", "Burger", "Spaghetti", "Sushi", "Salat", "Brot", "Käse", "Suppe", "Steak", "Apfel", "Banane", "Erdbeere", "Schokolade", "Kuchen", "Kartoffel", "Reis", "Omelett", "Lasagne", "Pfannkuchen", "Döner", "Risotto", "Wrap", "Falafel", "Ramen", "Curry", "Taco", "Quiche", "Gnocchi", "Bruschetta", "Maultaschen"],
       "Getränke": ["Wasser", "Tee", "Kaffee", "Saft", "Limonade", "Cola", "Milch", "Kakao", "Smoothie", "Eistee", "Espresso", "Latte", "Cappuccino", "Mineralwasser", "Apfelschorle", "Bier", "Wein", "Cocktail", "Mate", "Energydrink"],
-      "Orte": ["Schule", "Krankenhaus", "Bahnhof", "Flughafen", "Bibliothek", "Supermarkt", "Park", "Strand", "Wald", "Berg", "Insel", "Büro", "Kino", "Theater", "Museum", "Zoo", "Stadion", "Restaurant", "Bäckerei", "Schwimmbad"],
+      "Orte": ["Schule", "Krankenhaus", "Bahnhof", "Flughafen", "Bibliothek", "Supermarkt", "Park", "Strand", "Wald", "Berg", "Insel", "Büro", "Kino", "Theater", "Museum", "Zoo", "Stadion", "Restaurant", "Bäckerei", "Schwimmbad", "Aquarium", "Marktplatz", "Hafen", "Campingplatz", "Fußgängerzone", "Altstadt", "Rathaus", "Universität", "Freizeitpark", "Burg"],
       "Fahrzeuge": ["Auto", "Fahrrad", "Bus", "Zug", "Flugzeug", "Boot", "Motorrad", "Roller", "U-Bahn", "Straßenbahn", "LKW", "Helikopter", "Segelboot", "Kanu", "Skateboard", "Traktor", "Wohnmobil", "Taxi", "Lieferwagen", "Rettungswagen"],
-      "Sport": ["Fußball", "Basketball", "Tennis", "Volleyball", "Handball", "Schwimmen", "Laufen", "Radfahren", "Skifahren", "Boxen", "Yoga", "Klettern", "Tischtennis", "Badminton", "Rudern", "Surfen", "Reiten", "Golf", "Turnen", "Eishockey"],
+      "Sport": ["Fußball", "Basketball", "Tennis", "Volleyball", "Handball", "Schwimmen", "Laufen", "Radfahren", "Skifahren", "Boxen", "Yoga", "Klettern", "Tischtennis", "Badminton", "Rudern", "Surfen", "Reiten", "Golf", "Turnen", "Eishockey", "Fechten", "Triathlon", "Kanu", "Bogenschießen", "Parkour", "Breakdance", "Ringen", "Skateboard", "Baseball", "Pilates"],
       "Musik": ["Gitarre", "Klavier", "Schlagzeug", "Violine", "Flöte", "Saxofon", "Trompete", "Harfe", "Cello", "Mikrofon", "Konzert", "Band", "Orchester", "DJ", "Song", "Melodie", "Rhythmus", "Chor", "Playlist", "Album"],
-      "Technik": ["Laptop", "Smartphone", "Tablet", "Kopfhörer", "Fernseher", "Kamera", "Drucker", "Maus", "Tastatur", "Router", "Monitor", "Smartwatch", "Ladekabel", "Powerbank", "Bluetooth", "App", "Browser", "Cloud", "Akku", "Joystick"],
+      "Technik": ["Laptop", "Smartphone", "Tablet", "Kopfhörer", "Fernseher", "Kamera", "Drucker", "Maus", "Tastatur", "Router", "Monitor", "Smartwatch", "Ladekabel", "Powerbank", "Bluetooth", "App", "Browser", "Cloud", "Akku", "Joystick", "Mikrochip", "Server", "Firewall", "Sensor", "Drohne", "3D-Drucker", "VR-Brille", "Smart-Home", "Prozessor", "Touchscreen"],
       "Haushalt": ["Tisch", "Stuhl", "Sofa", "Bett", "Lampe", "Spiegel", "Schrank", "Teppich", "Kissen", "Decke", "Ofen", "Toaster", "Mixer", "Pfanne", "Topf", "Messer", "Gabel", "Löffel", "Teller", "Tasse"],
       "Kleidung": ["T-Shirt", "Hose", "Jeans", "Jacke", "Mantel", "Pullover", "Hemd", "Kleid", "Rock", "Schuhe", "Sneaker", "Stiefel", "Mütze", "Schal", "Handschuhe", "Socken", "Gürtel", "Brille", "Uhr", "Rucksack"],
       "Wetter": ["Sonne", "Regen", "Schnee", "Wind", "Nebel", "Gewitter", "Blitz", "Wolke", "Sturm", "Hagel", "Hitze", "Kälte", "Frost", "Regenbogen", "Dürre", "Monsun", "Tau", "Brise", "Orkan", "Unwetter"],
@@ -521,7 +536,7 @@
       "Emotionen": ["Freude", "Trauer", "Angst", "Wut", "Liebe", "Scham", "Ekel", "Neid", "Stolz", "Hoffnung", "Nervosität", "Eifersucht", "Dankbarkeit", "Erleichterung", "Überraschung", "Langeweile", "Sehnsucht", "Mut", "Frust", "Zufriedenheit"],
       "Farben": ["Rot", "Blau", "Grün", "Gelb", "Orange", "Lila", "Pink", "Türkis", "Braun", "Schwarz", "Weiß", "Grau", "Beige", "Gold", "Silber", "Mint", "Bordeaux", "Magenta", "Ocker", "Navy"],
       "Verben": ["laufen", "springen", "tanzen", "lesen", "schreiben", "kochen", "essen", "trinken", "singen", "malen", "bauen", "rechnen", "lachen", "weinen", "reisen", "fahren", "schwimmen", "klettern", "reden", "zuhören"],
-      "Natur": ["Fluss", "See", "Meer", "Wüste", "Vulkan", "Tal", "Wasserfall", "Gletscher", "Höhle", "Kliff", "Wiese", "Sumpf", "Riff", "Dschungel", "Savanne", "Steppe", "Quelle", "Bucht", "Lagune", "Felsen"],
+      "Natur": ["Fluss", "See", "Meer", "Wüste", "Vulkan", "Tal", "Wasserfall", "Gletscher", "Höhle", "Kliff", "Wiese", "Sumpf", "Riff", "Dschungel", "Savanne", "Steppe", "Quelle", "Bucht", "Lagune", "Felsen", "Schlucht", "Mangroven", "Korallenriff", "Moor", "Nordlicht", "Hochebene", "Kieselstrand", "Düne", "Urwald", "Auenlandschaft"],
       "Fantasy": ["Drache", "Zauberer", "Hexe", "Einhorn", "Ritter", "Schloss", "Zauberstab", "Elfe", "Ork", "Magier", "Amulett", "Portal", "Zaubertrank", "Quest", "Gilde", "Zauberspruch", "Königreich", "Mythos", "Kobold", "Dämon"],
       "Weltraum": ["Sonne", "Mond", "Erde", "Mars", "Venus", "Jupiter", "Saturn", "Uranus", "Neptun", "Stern", "Galaxie", "Komet", "Asteroid", "Rakete", "Raumstation", "Astronaut", "Teleskop", "Orbit", "Milchstraße", "Schwarzes Loch"],
       "Arbeit": ["Meeting", "Deadline", "Projekt", "Präsentation", "E-Mail", "Kalender", "Team", "Chef", "Büro", "Laptop", "Pause", "Homeoffice", "Report", "Strategie", "Planung", "Angebot", "Kunde", "Feedback", "Fortbildung", "Bewerbung"],
@@ -575,7 +590,7 @@
     };
 
     const WORDS_KIDS = {
-      "Tiere": ["Hund", "Katze", "Maus", "Elefant", "Giraffe", "Pinguin", "Delfin", "Wal", "Zebra", "Löwe", "Tiger", "Bär", "Fuchs", "Hase", "Eule", "Papagei", "Pferd", "Schaf", "Kuh", "Huhn"],
+      "Tiere": ["Hund", "Katze", "Maus", "Elefant", "Giraffe", "Pinguin", "Delfin", "Wal", "Zebra", "Löwe", "Tiger", "Bär", "Fuchs", "Hase", "Eule", "Papagei", "Pferd", "Schaf", "Kuh", "Huhn", "Ente", "Biene", "Igel", "Otter", "Eichhörnchen", "Panda", "Koala", "Seepferdchen", "Pinguinküken", "Känguru"],
       "Essen": ["Pizza", "Burger", "Spaghetti", "Salat", "Brot", "Käse", "Suppe", "Apfel", "Banane", "Erdbeere", "Schokolade", "Kuchen", "Kartoffel", "Reis", "Pfannkuchen", "Nudeln", "Tomate", "Gurke", "Karotte", "Joghurt"],
       "Getränke": ["Wasser", "Tee", "Saft", "Limonade", "Milch", "Kakao", "Smoothie", "Eistee", "Apfelschorle", "Orangensaft", "Traubensaft", "Kirschsaft", "Bananenmilch", "Erdbeermilch", "Früchtetee", "Eiswasser", "Minzwasser", "Sprudel", "Kräutertee", "Zitronenwasser"],
       "Orte": ["Schule", "Bahnhof", "Flughafen", "Bibliothek", "Supermarkt", "Park", "Strand", "Wald", "Berg", "Insel", "Kino", "Museum", "Zoo", "Restaurant", "Schwimmbad", "Spielplatz", "Bäckerei", "Turnhalle", "Pausenhof", "Garten"],
@@ -596,7 +611,8 @@
       "Wirtschaft": ["Inflation", "Rezession", "Konjunktur", "Liquidität", "Bilanz", "Dividende", "Aktienkurs", "Rendite", "Portfolio", "Anleihe", "Leitzins", "Import", "Export", "Bruttoinlandsprodukt", "Arbeitslosenquote", "Produktivität", "Lieferkette", "Margendruck", "Kapitalfluss", "Steuerquote"],
       "Philosophie": ["Ethik", "Moral", "Metaphysik", "Erkenntnistheorie", "Determinismus", "Utilitarismus", "Stoizismus", "Dualismus", "Existenzialismus", "Nihilismus", "Dialektik", "Kategorischer Imperativ", "Empirismus", "Rationalismus", "Skeptizismus", "Teleologie", "Ontologie", "Phänomenologie", "Hermeneutik", "Deontologie"],
       "Medizin": ["Anamnese", "Diagnose", "Therapie", "Prognose", "Symptom", "Entzündung", "Immunabwehr", "Antibiotikum", "Analgesie", "Pathologie", "Radiologie", "Anästhesie", "Neurologie", "Dermatologie", "Onkologie", "Kardiologie", "Pneumologie", "Gastroenterologie", "Endokrinologie", "Orthopädie"],
-      "Recht": ["Vertragsfreiheit", "Haftung", "Vorsatz", "Fahrlässigkeit", "Tatbestand", "Urteil", "Berufung", "Revision", "Prozesskosten", "Schadensersatz", "Unterlassung", "Eigentumsvorbehalt", "Gewährleistung", "Verjährung", "Zwangsvollstreckung", "Anklageschrift", "Beweislast", "Zeugenaussage", "Richterspruch", "Klagebefugnis"]
+      "Recht": ["Vertragsfreiheit", "Haftung", "Vorsatz", "Fahrlässigkeit", "Tatbestand", "Urteil", "Berufung", "Revision", "Prozesskosten", "Schadensersatz", "Unterlassung", "Eigentumsvorbehalt", "Gewährleistung", "Verjährung", "Zwangsvollstreckung", "Anklageschrift", "Beweislast", "Zeugenaussage", "Richterspruch", "Klagebefugnis"],
+      "Kunst": ["Expressionismus", "Kubismus", "Aquarell", "Skulptur", "Fresko", "Lithografie", "Installationskunst", "Collage", "Abstraktion", "Perspektive", "Vernissage", "Kurator", "Atelier", "Pinselstrich", "Komposition", "Kontrast", "Surrealismus", "Minimalismus", "Porträtmalerei", "Street-Art"]
     };
 
     const WORD_PACKS = {
