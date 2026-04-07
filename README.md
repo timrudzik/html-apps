@@ -10,8 +10,6 @@ Beispiel:
 ```
 /
 	index.html        <- Startseite mit Links zu allen Apps
-	/Test
-		index.html      <- eine einzelne Mini-App
 	/Timer
 		index.html
 	/Imposter
@@ -34,7 +32,6 @@ Dann ist die Seite unter
 Beispiele:
 
 - Startseite: `https://timrudzik.github.io/html-apps/`
-- Test-App: `https://timrudzik.github.io/html-apps/Test/`
 
 ## iPhone Nutzung
 
@@ -61,9 +58,6 @@ Wenn du KI-Animationen einbauen willst, sind diese Stellen in diesem Repo am sin
      - sanfte Puls-/Glow-Effekte bei Countdown-Ende
      - kurze Success-/Alert-Animationen statt Dauer-Loop
    - Ziel: Feedback geben, ohne die Lesbarkeit zu stören.
-
-4. **`/Test` (Experimentierfläche)**
-   - Perfekt als Sandbox, um neue KI-generierte Assets zu testen (Format, Ladezeit, mobile Performance), bevor du sie in produktive Apps übernimmst.
 
 ### Praktische Leitlinien
 

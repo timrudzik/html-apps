@@ -335,6 +335,9 @@
       transition: none;
       cursor: grabbing;
     }
+    .reveal-cover.locked {
+      cursor: default;
+    }
     .reveal-cover.revealed {
       transform: translateY(-100%);
       pointer-events: none;
@@ -398,6 +401,36 @@
       background: rgba(255,255,255,0.65);
       border: 1px solid rgba(117, 81, 57, 0.1);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+    }
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: rgba(23, 14, 11, 0.52);
+      backdrop-filter: blur(8px);
+    }
+    .dialog-backdrop[hidden] {
+      display: none !important;
+    }
+    .dialog-card {
+      width: min(100%, 420px);
+      margin: 0;
+      background: var(--panel-strong);
+      border: 1px solid rgba(117, 81, 57, 0.14);
+      box-shadow: var(--shadow);
+    }
+    .dialog-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    body.dialog-open {
+      overflow: hidden;
     }
     @media (max-width: 640px) {
       body {
@@ -504,7 +537,7 @@
         <div id="reveal-cover" class="reveal-cover" role="button" tabindex="0" aria-label="Nach oben schieben, um die Rolle zu sehen">
           <div class="reveal-grip"></div>
           <p id="reveal-instruction" class="reveal-instruction">Block nach oben schieben</p>
-          <p class="reveal-subtext">Darunter versteckt sich die Rolle.</p>
+          <p id="reveal-subtext" class="reveal-subtext">Darunter versteckt sich die Rolle.</p>
         </div>
       </div>
 
@@ -514,9 +547,9 @@
     </section>
 
     <section id="intermission-screen" class="card hidden">
-      <p class="screen-kicker">Diskussionsrunde</p>
+      <p class="screen-kicker">Nächster Schritt</p>
       <h2>Namen sagen & diskutieren</h2>
-      <p class="section-copy">Sagt jetzt nacheinander eure Hinweise – ohne die Auflösung zu sehen.</p>
+      <p class="section-copy">Sagt jetzt nacheinander eure Hinweise, ohne die Auflösung zu sehen.</p>
       <p><strong>Reihenfolge fürs Namen-Sagen:</strong></p>
       <ul id="intermission-speaking-order-list"></ul>
       <div class="buttons">
@@ -544,6 +577,18 @@
         <button id="new-round" class="primary">Neue Runde</button>
       </div>
     </section>
+  </div>
+
+  <div id="result-confirm-modal" class="dialog-backdrop" hidden role="presentation">
+    <div class="card dialog-card" role="dialog" aria-modal="true" aria-labelledby="result-confirm-title" aria-describedby="result-confirm-copy">
+      <p class="screen-kicker">Bestätigung</p>
+      <h2 id="result-confirm-title">Imposter wirklich preisgeben?</h2>
+      <p id="result-confirm-copy" class="section-copy">Willst du wirklich, dass der Imposter preisgegeben wird? Danach sehen alle die finale Auflösung.</p>
+      <div class="dialog-actions">
+        <button id="confirm-result-cancel" type="button">Nein</button>
+        <button id="confirm-result-accept" type="button" class="primary">Ja</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -600,6 +645,7 @@
     const revealAvatar = document.getElementById('reveal-avatar');
     const revealCover = document.getElementById('reveal-cover');
     const revealInstruction = document.getElementById('reveal-instruction');
+    const revealSubtext = document.getElementById('reveal-subtext');
     const nextPlayerButton = document.getElementById('next-player');
     const roleBox = document.getElementById('role-box');
     const roleMain = document.getElementById('role-main');
@@ -609,6 +655,9 @@
     const resultCategory = document.getElementById('result-category');
     const imposterList = document.getElementById('imposter-list');
     const intermissionSpeakingOrderList = document.getElementById('intermission-speaking-order-list');
+    const resultConfirmModal = document.getElementById('result-confirm-modal');
+    const confirmResultCancelButton = document.getElementById('confirm-result-cancel');
+    const confirmResultAcceptButton = document.getElementById('confirm-result-accept');
 
     const startGameButton = document.getElementById('start-game');
     const showSolutionButton = document.getElementById('show-solution');
@@ -636,6 +685,7 @@
       startY: 0,
       offset: 0
     };
+    let lastModalTrigger = null;
 
     const WORDS_KIDS = {
       "Tiere": ["Hund", "Katze", "Maus", "Elefant", "Giraffe", "Pinguin", "Delfin", "Wal", "Zebra", "Löwe", "Tiger", "Bär", "Fuchs", "Hase", "Eule", "Papagei", "Pferd", "Schaf", "Kuh", "Huhn", "Ente", "Biene", "Igel", "Otter", "Eichhörnchen", "Panda", "Koala", "Seepferdchen", "Pinguinküken", "Känguru"],
@@ -1109,8 +1159,10 @@
         offset: 0
       };
       revealCover.style.transform = 'translateY(0px)';
-      revealCover.classList.remove('dragging', 'revealed');
+      revealCover.classList.remove('dragging', 'locked', 'revealed');
       revealInstruction.textContent = 'Block nach oben schieben';
+      revealSubtext.textContent = 'Darunter versteckt sich die Rolle.';
+      revealCover.setAttribute('aria-label', 'Nach oben schieben, um die Rolle zu sehen');
     }
 
     function completeReveal() {
@@ -1122,12 +1174,15 @@
       if (pointerId !== null && typeof revealCover.releasePointerCapture === 'function' && revealCover.hasPointerCapture(pointerId)) {
         revealCover.releasePointerCapture(pointerId);
       }
-      revealCover.style.transform = '';
-      revealCover.classList.add('revealed');
-      revealInstruction.textContent = 'Aufgedeckt';
+      revealCover.classList.remove('revealed');
+      revealCover.classList.add('locked');
+      revealCover.style.transform = 'translateY(0px)';
+      revealInstruction.textContent = 'Rolle gesehen';
+      revealSubtext.textContent = 'Unten kannst du weitermachen.';
+      revealCover.setAttribute('aria-label', 'Rolle wurde bereits angesehen');
       nextPlayerButton.textContent = state.revealIndex >= state.players.length - 1
-        ? 'Auflösung ansehen'
-        : 'Weiter zum nächsten Spieler';
+        ? 'Nächster Schritt'
+        : 'Nächster Spieler';
       nextPlayerButton.classList.remove('hidden');
       state.isRoleShown = true;
     }
@@ -1185,7 +1240,33 @@
 
       if (event.key === 'ArrowUp' || event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        completeReveal();
+        if (revealCover.classList.contains('revealed')) {
+          return;
+        }
+        revealCover.classList.add('revealed');
+        window.setTimeout(() => {
+          if (!state.isRoleShown) {
+            completeReveal();
+          }
+        }, 320);
+      }
+    }
+
+    function openResultConfirmModal() {
+      lastModalTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      resultConfirmModal.hidden = false;
+      document.body.classList.add('dialog-open');
+      confirmResultAcceptButton.focus();
+    }
+
+    function closeResultConfirmModal({ restoreFocus = true } = {}) {
+      resultConfirmModal.hidden = true;
+      document.body.classList.remove('dialog-open');
+      if (restoreFocus && lastModalTrigger && typeof lastModalTrigger.focus === 'function') {
+        lastModalTrigger.focus();
+      }
+      if (!restoreFocus) {
+        lastModalTrigger = null;
       }
     }
 
@@ -1238,6 +1319,7 @@
       setupScreen.classList.add('hidden');
       intermissionScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
+      closeResultConfirmModal({ restoreFocus: false });
       revealScreen.classList.remove('hidden');
       renderRevealScreen();
     }
@@ -1329,6 +1411,7 @@
       revealScreen.classList.add('hidden');
       intermissionScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
+      closeResultConfirmModal({ restoreFocus: false });
       renderNameInputs();
       updateUsedWordsStatus();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1378,7 +1461,22 @@
     revealCover.addEventListener('pointercancel', handleRevealPointerEnd);
     revealCover.addEventListener('keydown', handleRevealKeydown);
     nextPlayerButton.addEventListener('click', nextStep);
-    showSolutionButton.addEventListener('click', showResults);
+    showSolutionButton.addEventListener('click', openResultConfirmModal);
+    confirmResultCancelButton.addEventListener('click', () => closeResultConfirmModal());
+    confirmResultAcceptButton.addEventListener('click', () => {
+      closeResultConfirmModal({ restoreFocus: false });
+      showResults();
+    });
+    resultConfirmModal.addEventListener('click', (event) => {
+      if (event.target === resultConfirmModal) {
+        closeResultConfirmModal();
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !resultConfirmModal.hidden) {
+        closeResultConfirmModal();
+      }
+    });
     newRoundButton.addEventListener('click', resetRound);
     resetUsedWordsButton.addEventListener('click', resetUsedWordsHistory);
 
