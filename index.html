@@ -8,14 +8,12 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f3efe8;
-      --bg-soft: #fbf8f4;
-      --surface: rgba(255, 252, 247, 0.78);
-      --surface-strong: rgba(255, 253, 250, 0.94);
-      --line: rgba(23, 26, 31, 0.08);
+      --bg: #f5f2ec;
+      --surface-strong: rgba(255, 255, 253, 0.88);
+      --line: rgba(23, 26, 31, 0.07);
       --ink: #171a1f;
       --muted: #666d78;
-      --shadow: 0 20px 60px rgba(43, 35, 30, 0.1);
+      --shadow: 0 18px 40px rgba(43, 35, 30, 0.08);
     }
 
     * {
@@ -32,9 +30,8 @@
       font-family: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at top left, rgba(231, 197, 153, 0.3), transparent 26%),
-        radial-gradient(circle at top right, rgba(144, 173, 209, 0.18), transparent 24%),
-        linear-gradient(180deg, var(--bg-soft), var(--bg));
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.72), transparent 30%),
+        linear-gradient(180deg, #faf8f4, var(--bg));
     }
 
     body::before {
@@ -42,10 +39,7 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background-image: linear-gradient(rgba(23, 26, 31, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(23, 26, 31, 0.03) 1px, transparent 1px);
-      background-size: 32px 32px;
-      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 72%);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 28%);
     }
 
     a {
@@ -54,104 +48,17 @@
     }
 
     .page {
-      width: min(1040px, calc(100% - 32px));
+      width: min(960px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 28px 0 56px;
+      padding: 48px 0 56px;
       position: relative;
       z-index: 1;
     }
 
-    .hero {
-      padding: 28px;
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.28)),
-        var(--surface);
-      backdrop-filter: blur(14px);
-      box-shadow: var(--shadow);
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-      font-size: 0.76rem;
-      font-weight: 800;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 34px;
-      height: 1px;
-      background: rgba(23, 26, 31, 0.16);
-    }
-
-    h1 {
-      margin: 0;
-      max-width: 10ch;
-      font-family: "Iowan Old Style", "Palatino Linotype", serif;
-      font-size: clamp(3rem, 8vw, 5.2rem);
-      line-height: 0.93;
-      letter-spacing: -0.05em;
-    }
-
-    .hero p {
-      margin: 18px 0 0;
-      max-width: 36rem;
-      font-size: 1.02rem;
-      line-height: 1.65;
-      color: var(--muted);
-    }
-
-    .meta-row {
-      margin-top: 26px;
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .meta-pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 42px;
-      padding: 0 14px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.56);
-      color: var(--muted);
-      font-size: 0.95rem;
-      backdrop-filter: blur(10px);
-    }
-
-    .section-head {
-      margin: 28px 0 14px;
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    h2 {
-      margin: 0;
-      font-size: 1.2rem;
-      letter-spacing: -0.03em;
-    }
-
-    .section-head p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
     .app-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
     }
 
     .app-card {
@@ -159,13 +66,12 @@
       display: grid;
       gap: 18px;
       min-height: 220px;
-      padding: 20px;
-      border-radius: 24px;
+      padding: 22px;
+      border-radius: 22px;
       border: 1px solid var(--line);
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.52)),
-        var(--surface-strong);
-      box-shadow: 0 16px 36px rgba(43, 35, 30, 0.08);
+      background: var(--surface-strong);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
       transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
     }
 
@@ -250,19 +156,13 @@
 
     @media (max-width: 640px) {
       .page {
-        width: min(1040px, calc(100% - 20px));
+        width: min(960px, calc(100% - 20px));
         padding-top: 20px;
       }
 
-      .hero,
       .app-card {
         padding: 18px;
-        border-radius: 22px;
-      }
-
-      .section-head {
-        align-items: flex-start;
-        flex-direction: column;
+        border-radius: 20px;
       }
     }
 
@@ -279,28 +179,7 @@
 </head>
 <body>
   <main class="page">
-    <header class="hero">
-      <div class="eyebrow">html-apps</div>
-      <h1>Kleine Programme. Sauber gesammelt.</h1>
-      <p>
-        Eine reduzierte Uebersicht fuer kleine Tools und Games.
-        Ruhig im Look, klar im Aufbau und direkt startklar.
-      </p>
-      <div class="meta-row">
-        <div class="meta-pill"><span id="appCount">0</span>&nbsp;Programme</div>
-        <div class="meta-pill">GitHub Pages ready</div>
-        <div class="meta-pill">Mobile freundlich</div>
-      </div>
-    </header>
-
-    <section aria-labelledby="apps-title">
-      <div class="section-head">
-        <h2 id="apps-title">Programme</h2>
-        <p>Kompakt, clean und offen fuer mehr.</p>
-      </div>
-
-      <div id="appGrid" class="app-grid"></div>
-    </section>
+    <div id="appGrid" class="app-grid" aria-label="Programme"></div>
   </main>
 
   <script>
@@ -325,10 +204,6 @@
     ];
 
     const appGrid = document.getElementById("appGrid");
-    const appCount = document.getElementById("appCount");
-
-    appCount.textContent = apps.length;
-
     appGrid.innerHTML = apps.map((app) => `
       <article class="app-card" style="--accent: ${app.accent};">
         <div>
