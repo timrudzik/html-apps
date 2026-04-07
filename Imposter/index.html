@@ -513,6 +513,17 @@
       </div>
     </section>
 
+    <section id="intermission-screen" class="card hidden">
+      <p class="screen-kicker">Diskussionsrunde</p>
+      <h2>Namen sagen & diskutieren</h2>
+      <p class="section-copy">Sagt jetzt nacheinander eure Hinweise – ohne die Auflösung zu sehen.</p>
+      <p><strong>Reihenfolge fürs Namen-Sagen:</strong></p>
+      <ul id="intermission-speaking-order-list"></ul>
+      <div class="buttons">
+        <button id="show-solution" class="primary">Auflösung anzeigen</button>
+      </div>
+    </section>
+
     <section id="result-screen" class="card hidden">
       <p class="screen-kicker">Auflösung</p>
       <h2>Auflösung</h2>
@@ -529,9 +540,6 @@
       </div>
       <p><strong>Imposter waren:</strong></p>
       <ul id="imposter-list"></ul>
-      <p><strong>Reihenfolge fürs Namen-Sagen:</strong></p>
-      <ul id="speaking-order-list"></ul>
-
       <div class="buttons">
         <button id="new-round" class="primary">Neue Runde</button>
       </div>
@@ -573,6 +581,7 @@
 
     const setupScreen = document.getElementById('setup-screen');
     const revealScreen = document.getElementById('reveal-screen');
+    const intermissionScreen = document.getElementById('intermission-screen');
     const resultScreen = document.getElementById('result-screen');
 
     const playerCountInput = document.getElementById('player-count');
@@ -599,9 +608,10 @@
     const resultWord = document.getElementById('result-word');
     const resultCategory = document.getElementById('result-category');
     const imposterList = document.getElementById('imposter-list');
-    const speakingOrderList = document.getElementById('speaking-order-list');
+    const intermissionSpeakingOrderList = document.getElementById('intermission-speaking-order-list');
 
     const startGameButton = document.getElementById('start-game');
+    const showSolutionButton = document.getElementById('show-solution');
     const newRoundButton = document.getElementById('new-round');
     const USED_WORDS_STORAGE_KEY = 'imposter.usedWords.v1';
 
@@ -1226,6 +1236,7 @@
       };
 
       setupScreen.classList.add('hidden');
+      intermissionScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
       revealScreen.classList.remove('hidden');
       renderRevealScreen();
@@ -1258,10 +1269,36 @@
         return;
       }
 
-      showResults();
+      showIntermission();
+    }
+
+    function renderSpeakingOrder(targetList) {
+      targetList.replaceChildren();
+      state.speakingOrder
+        .map((idx) => state.players[idx])
+        .forEach((player, orderIndex) => {
+          const item = document.createElement('li');
+          const row = document.createElement('div');
+          const name = document.createElement('span');
+
+          row.className = 'player-result';
+          row.append(createAvatarImage(player, true));
+          name.textContent = `${orderIndex + 1}. ${player.name}`;
+          row.append(name);
+          item.append(row);
+          targetList.append(item);
+        });
+    }
+
+    function showIntermission() {
+      revealScreen.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      intermissionScreen.classList.remove('hidden');
+      renderSpeakingOrder(intermissionSpeakingOrderList);
     }
 
     function showResults() {
+      intermissionScreen.classList.add('hidden');
       revealScreen.classList.add('hidden');
       resultScreen.classList.remove('hidden');
 
@@ -1269,7 +1306,6 @@
       resultCategory.textContent = state.category;
 
       imposterList.replaceChildren();
-      speakingOrderList.replaceChildren();
       state.imposterIndices
         .map((idx) => state.players[idx])
         .forEach((player) => {
@@ -1285,26 +1321,13 @@
           imposterList.append(item);
         });
 
-      state.speakingOrder
-        .map((idx) => state.players[idx])
-        .forEach((player, orderIndex) => {
-          const item = document.createElement('li');
-          const row = document.createElement('div');
-          const name = document.createElement('span');
-
-          row.className = 'player-result';
-          row.append(createAvatarImage(player, true));
-          name.textContent = `${orderIndex + 1}. ${player.name}`;
-          row.append(name);
-          item.append(row);
-          speakingOrderList.append(item);
-        });
     }
 
     function resetRound() {
       hideError();
       setupScreen.classList.remove('hidden');
       revealScreen.classList.add('hidden');
+      intermissionScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
       renderNameInputs();
       updateUsedWordsStatus();
@@ -1355,6 +1378,7 @@
     revealCover.addEventListener('pointercancel', handleRevealPointerEnd);
     revealCover.addEventListener('keydown', handleRevealKeydown);
     nextPlayerButton.addEventListener('click', nextStep);
+    showSolutionButton.addEventListener('click', showResults);
     newRoundButton.addEventListener('click', resetRound);
     resetUsedWordsButton.addEventListener('click', resetUsedWordsHistory);
 
