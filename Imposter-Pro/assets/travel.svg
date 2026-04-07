@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420" role="img" aria-label="Travel illustration">
+  <rect width="800" height="420" fill="#16203f"/>
+  <circle cx="650" cy="80" r="45" fill="#f4e29c"/>
+  <polygon points="120,320 310,120 500,320" fill="#4f7cff"/>
+  <polygon points="220,320 360,170 520,320" fill="#2ea9c9"/>
+  <rect x="560" y="160" width="120" height="170" rx="16" fill="#f0b46a"/>
+  <rect x="585" y="190" width="70" height="18" rx="8" fill="#173c66"/>
+  <text x="75" y="380" fill="#ffffff" font-size="42" font-family="Verdana">Imposter Royale · Travel Pack</text>
+</svg>

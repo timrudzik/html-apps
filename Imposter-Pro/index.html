@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Imposter Royale</title>
+    <meta
+      name="description"
+      content="Production-ready Imposter Party App mit Bilderkarten, Rollenverteilung, Runden-Timer und Fairness-Features."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Verkaufsfähige Party-App</p>
+        <h1>Imposter Royale</h1>
+      </div>
+      <button id="resetAll" class="ghost">Neue Session</button>
+    </header>
+
+    <main class="layout">
+      <section class="card config" aria-labelledby="settingsTitle">
+        <h2 id="settingsTitle">Spiel konfigurieren</h2>
+
+        <div class="field-grid">
+          <label>
+            Spieleranzahl
+            <input id="playerCount" type="number" min="3" max="20" value="8" />
+          </label>
+          <label>
+            Imposter
+            <input id="imposterCount" type="number" min="1" max="5" value="1" />
+          </label>
+          <label>
+            Rundenzeit (Min)
+            <input id="roundMinutes" type="number" min="1" max="30" value="6" />
+          </label>
+          <label>
+            Schwierigkeitsgrad
+            <select id="difficulty">
+              <option value="normal">Normal</option>
+              <option value="hard">Hard (ähnlichere Begriffe)</option>
+            </select>
+          </label>
+        </div>
+
+        <fieldset>
+          <legend>Kategorie wählen</legend>
+          <div class="chips" id="categoryContainer" role="radiogroup" aria-label="Kategorien"></div>
+        </fieldset>
+
+        <div class="actions">
+          <button id="generateGame" class="primary">Runde generieren</button>
+          <button id="shuffleRoles">Rollen neu mischen</button>
+        </div>
+
+        <p id="validationMessage" class="message" aria-live="polite"></p>
+      </section>
+
+      <section class="card reveal" aria-labelledby="revealTitle">
+        <h2 id="revealTitle">Rollen anzeigen</h2>
+        <div class="field-grid">
+          <label>
+            Aktueller Spieler
+            <input id="playerName" type="text" placeholder="z. B. Spieler 1" maxlength="24" />
+          </label>
+          <button id="revealRole" class="primary">Meine Rolle anzeigen</button>
+        </div>
+
+        <article id="roleResult" class="role-result hidden" aria-live="polite">
+          <h3 id="roleLabel">Rolle</h3>
+          <img id="roleImage" src="" alt="Rollenbild" />
+          <p id="roleWord"></p>
+          <small id="hint"></small>
+        </article>
+      </section>
+
+      <section class="card timer" aria-labelledby="timerTitle">
+        <h2 id="timerTitle">Runden-Timer & Moderation</h2>
+        <div class="timer-row">
+          <p id="countdown" class="countdown">06:00</p>
+          <div>
+            <button id="startTimer" class="primary">Start</button>
+            <button id="pauseTimer">Pause</button>
+            <button id="resetTimer">Reset</button>
+          </div>
+        </div>
+
+        <ul class="checklist">
+          <li>✅ Keyboard-Navigation & sichtbarer Fokus</li>
+          <li>✅ Kontrastreiche Farben für dunkle Räume</li>
+          <li>✅ Session-Speicherung für Event-Hosts</li>
+        </ul>
+      </section>
+
+      <section class="card monetization" aria-labelledby="bizTitle">
+        <h2 id="bizTitle">Monetarisierung (für Verkauf)</h2>
+        <ul>
+          <li>Pro-Tier: +100 Premium-Bilderkarten</li>
+          <li>White-Label: Branding für Firmen-Events</li>
+          <li>In-App Pakete: saisonale Imposter-Themen</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <small>Imposter Royale — gebaut für Live-Partys, Teams und Creator.</small>
+    </footer>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
