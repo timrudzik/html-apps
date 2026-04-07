@@ -3,26 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#10223b">
+  <meta name="theme-color" content="#171a1f">
   <title>html-apps</title>
   <style>
     :root {
       color-scheme: light;
-      --bg-top: #f5eee4;
-      --bg-bottom: #f0ded1;
-      --ink: #141a24;
-      --muted: #5d6472;
-      --line: rgba(20, 26, 36, 0.1);
-      --panel: rgba(255, 249, 243, 0.78);
-      --panel-strong: rgba(255, 252, 247, 0.92);
-      --shadow: 0 30px 80px rgba(70, 47, 37, 0.14);
-      --shadow-soft: 0 18px 45px rgba(70, 47, 37, 0.1);
-      --timer-1: #132a4a;
-      --timer-2: #4ce5f1;
-      --timer-3: #7aa9ff;
-      --imposter-1: #6b2917;
-      --imposter-2: #b75a2d;
-      --imposter-3: #f1bb70;
+      --bg: #f3efe8;
+      --bg-soft: #fbf8f4;
+      --surface: rgba(255, 252, 247, 0.78);
+      --surface-strong: rgba(255, 253, 250, 0.94);
+      --line: rgba(23, 26, 31, 0.08);
+      --ink: #171a1f;
+      --muted: #666d78;
+      --shadow: 0 20px 60px rgba(43, 35, 30, 0.1);
     }
 
     * {
@@ -36,41 +29,23 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
-      line-height: 1.5;
+      font-family: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at 15% 20%, rgba(241, 187, 112, 0.42), transparent 24%),
-        radial-gradient(circle at 85% 0%, rgba(76, 229, 241, 0.24), transparent 26%),
-        linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
-      overflow-x: hidden;
-    }
-
-    body::before,
-    body::after {
-      content: "";
-      position: fixed;
-      inset: auto;
-      width: 320px;
-      height: 320px;
-      border-radius: 50%;
-      filter: blur(24px);
-      opacity: 0.32;
-      pointer-events: none;
-      animation: drift 18s ease-in-out infinite alternate;
+        radial-gradient(circle at top left, rgba(231, 197, 153, 0.3), transparent 26%),
+        radial-gradient(circle at top right, rgba(144, 173, 209, 0.18), transparent 24%),
+        linear-gradient(180deg, var(--bg-soft), var(--bg));
     }
 
     body::before {
-      top: -80px;
-      right: -60px;
-      background: rgba(76, 229, 241, 0.32);
-    }
-
-    body::after {
-      bottom: -120px;
-      left: -80px;
-      background: rgba(241, 187, 112, 0.32);
-      animation-duration: 22s;
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(23, 26, 31, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(23, 26, 31, 0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 72%);
     }
 
     a {
@@ -79,521 +54,215 @@
     }
 
     .page {
-      width: min(1160px, calc(100% - 32px));
+      width: min(1040px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 24px 0 56px;
+      padding: 28px 0 56px;
       position: relative;
       z-index: 1;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 22px;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.82rem;
-      font-weight: 800;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .brand-mark {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--timer-2), var(--imposter-2));
-      box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.28);
-    }
-
-    .top-link {
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(20, 26, 36, 0.12);
-      background: rgba(255, 255, 255, 0.46);
-      color: var(--muted);
-      font-size: 0.95rem;
-      backdrop-filter: blur(10px);
     }
 
     .hero {
-      position: relative;
-      overflow: hidden;
-      display: grid;
-      grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
-      gap: 20px;
-      padding: 30px;
-      border-radius: 34px;
+      padding: 28px;
       border: 1px solid var(--line);
+      border-radius: 28px;
       background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.18)),
-        var(--panel);
-      backdrop-filter: blur(18px);
+        linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.28)),
+        var(--surface);
+      backdrop-filter: blur(14px);
       box-shadow: var(--shadow);
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      top: -120px;
-      right: -70px;
-      width: 280px;
-      height: 280px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(76, 229, 241, 0.26), transparent 66%);
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      bottom: -160px;
-      left: -80px;
-      width: 320px;
-      height: 320px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(241, 187, 112, 0.24), transparent 64%);
-    }
-
-    .hero-copy,
-    .hero-visual {
-      position: relative;
-      z-index: 1;
     }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 14px;
-      font-size: 0.82rem;
+      margin-bottom: 16px;
+      font-size: 0.76rem;
       font-weight: 800;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: #7b5740;
+      color: var(--muted);
     }
 
     .eyebrow::before {
       content: "";
-      width: 36px;
+      width: 34px;
       height: 1px;
-      background: rgba(123, 87, 64, 0.38);
-    }
-
-    h1,
-    h2 {
-      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
-      letter-spacing: -0.04em;
+      background: rgba(23, 26, 31, 0.16);
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(3rem, 8vw, 5.6rem);
-      line-height: 0.92;
       max-width: 10ch;
+      font-family: "Iowan Old Style", "Palatino Linotype", serif;
+      font-size: clamp(3rem, 8vw, 5.2rem);
+      line-height: 0.93;
+      letter-spacing: -0.05em;
     }
 
-    .hero-copy p {
+    .hero p {
       margin: 18px 0 0;
-      max-width: 33rem;
-      font-size: 1.06rem;
+      max-width: 36rem;
+      font-size: 1.02rem;
+      line-height: 1.65;
       color: var(--muted);
     }
 
-    .cta-row {
-      margin-top: 28px;
+    .meta-row {
+      margin-top: 26px;
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
     }
 
-    .button {
+    .meta-pill {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
-      min-height: 52px;
-      padding: 0 18px;
+      min-height: 42px;
+      padding: 0 14px;
       border-radius: 999px;
-      border: 1px solid transparent;
-      font-weight: 700;
-      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
-    }
-
-    .button.primary {
-      background: linear-gradient(135deg, #1a3152, #274d80);
-      color: #f7fbff;
-      box-shadow: 0 18px 28px rgba(20, 36, 61, 0.22);
-    }
-
-    .button.secondary {
+      border: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.56);
-      border-color: rgba(20, 26, 36, 0.1);
-      color: var(--ink);
-    }
-
-    .button:hover,
-    .app-link:hover {
-      transform: translateY(-2px);
-    }
-
-    .stats {
-      margin-top: 26px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .stat {
-      padding: 14px 16px;
-      border-radius: 20px;
-      border: 1px solid rgba(20, 26, 36, 0.08);
-      background: rgba(255, 255, 255, 0.48);
+      color: var(--muted);
+      font-size: 0.95rem;
       backdrop-filter: blur(10px);
     }
 
-    .stat strong {
-      display: block;
-      font-size: 1.15rem;
-      letter-spacing: -0.03em;
-    }
-
-    .stat span {
-      display: block;
-      margin-top: 4px;
-      font-size: 0.92rem;
-      color: var(--muted);
-    }
-
-    .hero-visual {
-      display: grid;
-      align-content: center;
-    }
-
-    .visual-stack {
-      position: relative;
-      min-height: 380px;
-    }
-
-    .halo {
-      position: absolute;
-      inset: 58px 54px 46px;
-      border-radius: 50%;
-      border: 1px dashed rgba(20, 26, 36, 0.14);
-      opacity: 0.7;
-    }
-
-    .visual-card {
-      position: absolute;
-      width: min(100%, 320px);
-      padding: 20px;
-      border-radius: 28px;
-      color: #fffaf4;
-      box-shadow: var(--shadow-soft);
-      animation: float 8s ease-in-out infinite;
-    }
-
-    .visual-card strong {
-      display: block;
-      margin-top: 10px;
-      font-size: 1.65rem;
-      line-height: 1.02;
-      letter-spacing: -0.04em;
-    }
-
-    .visual-card p {
-      margin: 10px 0 0;
-      font-size: 0.96rem;
-      color: rgba(255, 250, 244, 0.8);
-    }
-
-    .visual-card.timer {
-      top: 0;
-      left: 0;
-      background:
-        radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 32%),
-        linear-gradient(160deg, var(--timer-1), #204574 54%, #0e1625);
-    }
-
-    .visual-card.imposter {
-      right: 0;
-      bottom: 10px;
-      animation-delay: -3s;
-      background:
-        radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 34%),
-        linear-gradient(160deg, var(--imposter-1), var(--imposter-2) 58%, var(--imposter-3) 120%);
-    }
-
-    .visual-label {
-      display: inline-flex;
-      padding: 7px 10px;
-      border-radius: 999px;
-      font-size: 0.76rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      background: rgba(255, 255, 255, 0.14);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-    }
-
-    .mini-pills {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-    }
-
-    .mini-pills span {
-      display: inline-flex;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.12);
-      font-size: 0.82rem;
-      color: rgba(255, 250, 244, 0.8);
-    }
-
     .section-head {
-      margin: 34px 0 16px;
+      margin: 28px 0 14px;
       display: flex;
-      justify-content: space-between;
       align-items: end;
-      gap: 18px;
+      justify-content: space-between;
+      gap: 16px;
     }
 
     h2 {
       margin: 0;
-      font-size: clamp(2rem, 5vw, 3rem);
-      line-height: 0.98;
+      font-size: 1.2rem;
+      letter-spacing: -0.03em;
     }
 
     .section-head p {
       margin: 0;
-      max-width: 34rem;
       color: var(--muted);
+      font-size: 0.95rem;
     }
 
     .app-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
     }
 
     .app-card {
-      position: relative;
-      overflow: hidden;
-      min-height: 340px;
-      padding: 24px;
-      border-radius: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: var(--shadow-soft);
-      transition: transform 180ms ease, box-shadow 180ms ease;
+      --accent: #171a1f;
+      display: grid;
+      gap: 18px;
+      min-height: 220px;
+      padding: 20px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.52)),
+        var(--surface-strong);
+      box-shadow: 0 16px 36px rgba(43, 35, 30, 0.08);
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
     }
 
     .app-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 26px 52px rgba(70, 47, 37, 0.16);
+      transform: translateY(-3px);
+      border-color: rgba(23, 26, 31, 0.14);
+      box-shadow: 0 24px 46px rgba(43, 35, 30, 0.12);
     }
 
-    .app-card.timer {
-      background:
-        radial-gradient(circle at top right, rgba(255, 255, 255, 0.2), transparent 28%),
-        linear-gradient(165deg, var(--timer-1), #254e81 50%, #0c1220 100%);
-      color: #edf8ff;
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
     }
 
-    .app-card.imposter {
-      background:
-        radial-gradient(circle at top right, rgba(255, 255, 255, 0.2), transparent 28%),
-        linear-gradient(165deg, var(--imposter-1), var(--imposter-2) 52%, var(--imposter-3) 115%);
-      color: #fff7f0;
-    }
-
-    .app-card::after {
-      content: "";
-      position: absolute;
-      right: -42px;
-      bottom: -56px;
-      width: 180px;
-      height: 180px;
+    .app-mark {
+      width: 13px;
+      height: 13px;
+      margin-top: 6px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--accent);
+      box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.74);
+      flex-shrink: 0;
     }
 
-    .card-copy {
-      position: relative;
-      z-index: 1;
-      max-width: 28rem;
-    }
-
-    .card-kicker {
-      margin: 0 0 10px;
-      font-size: 0.78rem;
+    .app-type {
+      margin: 0 0 8px;
+      font-size: 0.74rem;
       font-weight: 800;
       letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: rgba(255, 249, 240, 0.74);
+      color: var(--muted);
     }
 
     .app-card h3 {
       margin: 0;
-      font-size: clamp(2rem, 4vw, 2.8rem);
-      line-height: 0.96;
+      font-size: 1.65rem;
+      line-height: 1;
       letter-spacing: -0.05em;
-      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
     }
 
     .app-card p {
-      margin: 12px 0 0;
-      color: rgba(255, 249, 240, 0.82);
-      font-size: 1rem;
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
     }
 
-    .feature-row {
-      margin-top: 18px;
+    .tag-row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .feature-row span {
+    .tag {
       display: inline-flex;
-      padding: 8px 11px;
+      padding: 7px 10px;
       border-radius: 999px;
-      font-size: 0.83rem;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-    }
-
-    .card-footer {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .card-note {
-      font-size: 0.92rem;
-      color: rgba(255, 249, 240, 0.78);
+      background: rgba(23, 26, 31, 0.04);
+      border: 1px solid rgba(23, 26, 31, 0.07);
+      color: var(--muted);
+      font-size: 0.84rem;
     }
 
     .app-link {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
       min-height: 48px;
-      padding: 0 16px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.16);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: #fffaf4;
+      padding: 0 14px;
+      border-radius: 16px;
+      background: rgba(23, 26, 31, 0.04);
+      border: 1px solid rgba(23, 26, 31, 0.07);
       font-weight: 700;
-      backdrop-filter: blur(8px);
-      transition: transform 160ms ease, background 160ms ease;
     }
 
-    .bottom-strip {
-      margin-top: 18px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .bottom-card {
-      padding: 18px;
-      border-radius: 22px;
-      border: 1px solid rgba(20, 26, 36, 0.08);
-      background: var(--panel-strong);
-      box-shadow: var(--shadow-soft);
-    }
-
-    .bottom-card strong {
-      display: block;
-      font-size: 1rem;
-      letter-spacing: -0.02em;
-    }
-
-    .bottom-card p {
-      margin: 8px 0 0;
-      font-size: 0.95rem;
+    .app-link span:last-child {
       color: var(--muted);
-    }
-
-    @keyframes float {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-8px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
-    }
-
-    @keyframes drift {
-      0% {
-        transform: translate3d(0, 0, 0) scale(1);
-      }
-      100% {
-        transform: translate3d(18px, -22px, 0) scale(1.08);
-      }
-    }
-
-    @media (max-width: 920px) {
-      .hero,
-      .app-grid,
-      .bottom-strip {
-        grid-template-columns: 1fr;
-      }
-
-      .visual-stack {
-        min-height: 340px;
-      }
-
-      .section-head {
-        align-items: start;
-        flex-direction: column;
-      }
     }
 
     @media (max-width: 640px) {
       .page {
-        width: min(1160px, calc(100% - 20px));
-        padding-top: 18px;
+        width: min(1040px, calc(100% - 20px));
+        padding-top: 20px;
       }
 
       .hero,
       .app-card {
-        padding: 22px;
-        border-radius: 26px;
+        padding: 18px;
+        border-radius: 22px;
       }
 
-      h1 {
-        max-width: none;
-      }
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar {
+      .section-head {
         align-items: flex-start;
         flex-direction: column;
-      }
-
-      .visual-card {
-        width: min(100%, 280px);
       }
     }
 
@@ -610,135 +279,79 @@
 </head>
 <body>
   <main class="page">
-    <div class="topbar">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span>html-apps</span>
+    <header class="hero">
+      <div class="eyebrow">html-apps</div>
+      <h1>Kleine Programme. Sauber gesammelt.</h1>
+      <p>
+        Eine reduzierte Uebersicht fuer kleine Tools und Games.
+        Ruhig im Look, klar im Aufbau und direkt startklar.
+      </p>
+      <div class="meta-row">
+        <div class="meta-pill"><span id="appCount">0</span>&nbsp;Programme</div>
+        <div class="meta-pill">GitHub Pages ready</div>
+        <div class="meta-pill">Mobile freundlich</div>
       </div>
-      <a class="top-link" href="#apps">Direkt zu den Apps</a>
-    </div>
+    </header>
 
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-copy">
-        <div class="eyebrow">Kleine Tools, große Wirkung</div>
-        <h1 id="hero-title">Deine Mini-Apps mit richtig guter Bühne.</h1>
-        <p>
-          Zwei kleine Web-Apps, aber nicht wie ein Ablageordner mit Links.
-          Hier wirkt alles eher wie eine kuratierte Sammlung: schnell, mobilfreundlich und direkt startklar.
-        </p>
-        <div class="cta-row">
-          <a class="button primary" href="./Timer/">Timer starten</a>
-          <a class="button secondary" href="./Imposter/">Imposter öffnen</a>
-        </div>
-        <div class="stats" aria-label="Projektmerkmale">
-          <div class="stat">
-            <strong>2 Live-Apps</strong>
-            <span>klar fokussiert statt überladen</span>
-          </div>
-          <div class="stat">
-            <strong>Single-File Setup</strong>
-            <span>schnell deploybar auf GitHub Pages</span>
-          </div>
-          <div class="stat">
-            <strong>Mobile ready</strong>
-            <span>funktioniert gut als Homescreen-App</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="hero-visual" aria-hidden="true">
-        <div class="visual-stack">
-          <div class="halo"></div>
-          <article class="visual-card timer">
-            <span class="visual-label">Timer</span>
-            <strong>Fokus mit Glow und klarer Anzeige.</strong>
-            <p>Für Countdown, schnelle Sessions und einen Look mit echtem App-Gefühl.</p>
-            <div class="mini-pills">
-              <span>Countdown</span>
-              <span>Presets</span>
-              <span>Session Flow</span>
-            </div>
-          </article>
-          <article class="visual-card imposter">
-            <span class="visual-label">Imposter</span>
-            <strong>Spielerisch, warm und sofort gruppentauglich.</strong>
-            <p>Mehr Story, mehr Stimmung und ein Layout, das nicht nach Rohbau aussieht.</p>
-            <div class="mini-pills">
-              <span>Party Game</span>
-              <span>Reveal</span>
-              <span>Personality</span>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="apps" aria-labelledby="apps-title">
+    <section aria-labelledby="apps-title">
       <div class="section-head">
-        <h2 id="apps-title">Die aktuelle Auswahl</h2>
-        <p>
-          Jede App hat ihren eigenen Charakter. Der Timer geht auf Klarheit und Tempo,
-          Imposter mehr auf Atmosphäre und Spielmoment.
-        </p>
+        <h2 id="apps-title">Programme</h2>
+        <p>Kompakt, clean und offen fuer mehr.</p>
       </div>
 
-      <div class="app-grid">
-        <article class="app-card timer">
-          <div class="card-copy">
-            <p class="card-kicker">Schnell. Präzise. Klar.</p>
-            <h3>Ultra Timer</h3>
-            <p>
-              Ein fokussierter Timer mit modernem Glow-Look, ideal für kurze Sessions,
-              Routinen oder Konzentrationsblöcke ohne unnötigen Ballast.
-            </p>
-            <div class="feature-row">
-              <span>Große Anzeige</span>
-              <span>Presets</span>
-              <span>Klare States</span>
-            </div>
-          </div>
-          <div class="card-footer">
-            <span class="card-note">Für Fokus, Pausen und schnelle Starts.</span>
-            <a class="app-link" href="./Timer/">Zum Timer</a>
-          </div>
-        </article>
-
-        <article class="app-card imposter">
-          <div class="card-copy">
-            <p class="card-kicker">Warm. Social. Spielerisch.</p>
-            <h3>Imposter</h3>
-            <p>
-              Ein Party-Game mit deutlich mehr Charakter als ein reines Funktionslayout:
-              starke Stimmung, klare Rollen-Momente und ein Auftritt mit Persönlichkeit.
-            </p>
-            <div class="feature-row">
-              <span>Party Setup</span>
-              <span>Role Reveal</span>
-              <span>Atmosphäre</span>
-            </div>
-          </div>
-          <div class="card-footer">
-            <span class="card-note">Für Runden, Lacher und schnelle Spielstarts.</span>
-            <a class="app-link" href="./Imposter/">Zu Imposter</a>
-          </div>
-        </article>
-      </div>
-
-      <div class="bottom-strip" aria-label="Sammlungseigenschaften">
-        <article class="bottom-card">
-          <strong>Direkter Zugriff</strong>
-          <p>Keine unnötige Menüebene. Ein Tap und du bist sofort in der App.</p>
-        </article>
-        <article class="bottom-card">
-          <strong>Visuell kuratiert</strong>
-          <p>Die Startseite wirkt jetzt wie ein Showcase statt wie eine nackte Dateiliste.</p>
-        </article>
-        <article class="bottom-card">
-          <strong>Sauber entschlackt</strong>
-          <p>Die alte Experimentierfläche ist raus, damit nur noch die echten Apps im Fokus stehen.</p>
-        </article>
-      </div>
+      <div id="appGrid" class="app-grid"></div>
     </section>
   </main>
+
+  <script>
+    // Neue Apps hier ergaenzen.
+    const apps = [
+      {
+        name: "Timer",
+        type: "Utility",
+        href: "./Timer/",
+        description: "Ein schneller Timer fuer Fokus-Sessions, Countdowns und kurze Routinen.",
+        tags: ["Fokus", "Countdown"],
+        accent: "#1f4f7a"
+      },
+      {
+        name: "Imposter",
+        type: "Game",
+        href: "./Imposter/",
+        description: "Ein Social Game fuer kleine Gruppen mit direktem Einstieg und klarer UI.",
+        tags: ["Party", "Gruppe"],
+        accent: "#9a4e2f"
+      }
+    ];
+
+    const appGrid = document.getElementById("appGrid");
+    const appCount = document.getElementById("appCount");
+
+    appCount.textContent = apps.length;
+
+    appGrid.innerHTML = apps.map((app) => `
+      <article class="app-card" style="--accent: ${app.accent};">
+        <div>
+          <div class="card-top">
+            <div>
+              <p class="app-type">${app.type}</p>
+              <h3>${app.name}</h3>
+            </div>
+            <span class="app-mark" aria-hidden="true"></span>
+          </div>
+          <p>${app.description}</p>
+        </div>
+        <div>
+          <div class="tag-row">
+            ${app.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}
+          </div>
+          <a class="app-link" href="${app.href}">
+            <span>App oeffnen</span>
+            <span>→</span>
+          </a>
+        </div>
+      </article>
+    `).join("");
+  </script>
 </body>
 </html>
