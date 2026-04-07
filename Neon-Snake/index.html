@@ -443,146 +443,29 @@
       }
 
       .stats {
-        top: calc(10px + env(safe-area-inset-top, 0px));
-        padding: 10px 12px;
-        border-radius: 18px;
-      }
-
-      .brand-row {
-        margin-bottom: 8px;
-        align-items: center;
-      }
-
-      .brand-row > div {
-        display: none;
-      }
-
-      .tag {
-        padding: 5px 8px;
-        font-size: 0.68rem;
-      }
-
-      .stat-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 6px;
-        margin-bottom: 8px;
-      }
-
-      .stat-card {
-        padding: 8px 9px;
-        border-radius: 14px;
-      }
-
-      .stat-label {
-        font-size: 0.6rem;
-        margin-bottom: 2px;
-      }
-
-      .stat-value {
-        font-size: 1rem;
-      }
-
-      .charge-wrap {
-        gap: 6px;
-        margin-bottom: 0;
-      }
-
-      .charge-row {
-        font-size: 0.82rem;
-      }
-
-      .status-line {
-        display: none;
+        top: 12px;
       }
 
       .board {
-        display: none;
+        top: auto;
+        bottom: 176px;
       }
 
       .control-bar {
-        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-        padding: 10px;
-        border-radius: 18px;
-        justify-content: center;
+        bottom: 12px;
       }
 
       .touch-controls {
-        left: 12px;
         right: 12px;
-        bottom: calc(82px + env(safe-area-inset-bottom, 0px));
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 8px;
+        bottom: 212px;
       }
 
-      .touch-controls button {
-        min-width: 0;
-        flex: 1;
-        padding: 12px 14px;
-        border-radius: 999px;
-      }
-
-      .control-copy {
-        display: none;
-      }
-
-      .button-row {
-        width: 100%;
-        display: flex;
-        gap: 8px;
-      }
-
-      .button-row button {
-        min-width: 0;
-        flex: 1;
-        padding: 10px 8px;
-        font-size: 0.92rem;
-      }
-
-      #pulseBtn {
-        display: none;
+      .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .hero-card {
         padding: 22px 20px 20px;
-        max-height: calc(100vh - 48px);
-        overflow: auto;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .stats {
-        left: 8px;
-        right: 8px;
-      }
-
-      .control-bar {
-        left: 8px;
-        right: 8px;
-        padding: 8px;
-      }
-
-      .touch-controls {
-        left: 8px;
-        right: 8px;
-      }
-
-      .touch-controls button,
-      .button-row button {
-        font-size: 0.88rem;
-      }
-
-      .hero-card {
-        padding: 18px 16px 16px;
-      }
-
-      .feature-list {
-        gap: 8px;
-        margin: 14px 0;
-      }
-
-      .feature-list li {
-        padding: 10px 12px;
       }
     }
   </style>
@@ -1607,10 +1490,6 @@
     }
 
     function drawMinimap() {
-      if (VIEW.width <= 720 || VIEW.height <= 640) {
-        return;
-      }
-
       const width = 128;
       const height = 128;
       const x = VIEW.width - width - 28;
