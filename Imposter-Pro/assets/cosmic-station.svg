@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="Cosmic station artwork">
+  <defs>
+    <radialGradient id="space" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#2a3e8a"/>
+      <stop offset="100%" stop-color="#060815"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#space)"/>
+  <circle cx="180" cy="160" r="120" fill="#90f0ff" opacity="0.85"/>
+  <circle cx="940" cy="220" r="165" fill="#9268ff" opacity="0.5"/>
+  <ellipse cx="610" cy="500" rx="320" ry="150" fill="#141d43"/>
+  <ellipse cx="610" cy="500" rx="250" ry="95" fill="#202d69"/>
+  <rect x="500" y="320" width="220" height="360" rx="24" fill="#30458e"/>
+  <rect x="540" y="365" width="140" height="120" rx="12" fill="#8eeeff"/>
+  <path d="M350 460H120M1080 460H870" stroke="#7bf3e8" stroke-width="16" stroke-linecap="round"/>
+  <g fill="#ffffff">
+    <circle cx="1040" cy="120" r="5"/><circle cx="1095" cy="180" r="4"/><circle cx="420" cy="120" r="4"/><circle cx="760" cy="90" r="6"/>
+    <circle cx="860" cy="350" r="4"/><circle cx="220" cy="350" r="6"/><circle cx="260" cy="110" r="4"/><circle cx="1150" cy="390" r="5"/>
+  </g>
+  <text x="70" y="845" fill="#ebf1ff" font-family="Inter,Arial" font-size="56" font-weight="700">Cosmic Drift — AI Art Style</text>
+</svg>

@@ -1,0 +1,1714 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neon Snake Arena</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-1: #04020a;
+      --bg-2: #120822;
+      --bg-3: #1b1140;
+      --panel: rgba(9, 12, 24, 0.7);
+      --panel-strong: rgba(11, 14, 28, 0.88);
+      --border: rgba(126, 202, 255, 0.18);
+      --text: #eff7ff;
+      --muted: #9cb5d3;
+      --accent: #7cf5ff;
+      --accent-2: #ff5fd2;
+      --accent-3: #ffd166;
+      --good: #73ffa7;
+      --danger: #ff7a90;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      overflow: hidden;
+      font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(124, 245, 255, 0.16), transparent 26%),
+        radial-gradient(circle at 100% 10%, rgba(255, 95, 210, 0.15), transparent 28%),
+        radial-gradient(circle at 50% 120%, rgba(255, 209, 102, 0.12), transparent 42%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2) 55%, var(--bg-3));
+      color: var(--text);
+    }
+
+    body {
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button,
+    canvas {
+      touch-action: none;
+    }
+
+    .app-shell {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .panel {
+      position: absolute;
+      z-index: 3;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+        var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .stats {
+      top: 18px;
+      left: 18px;
+      width: min(320px, calc(100vw - 36px));
+      padding: 16px 16px 14px;
+      border-radius: 24px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: rgba(124, 245, 255, 0.88);
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 2px 0 0;
+      font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+      line-height: 0.94;
+      letter-spacing: -0.05em;
+    }
+
+    .tag {
+      border-radius: 999px;
+      border: 1px solid rgba(124, 245, 255, 0.32);
+      color: var(--accent);
+      padding: 6px 10px;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+      background: rgba(124, 245, 255, 0.08);
+      white-space: nowrap;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-card {
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .stat-label {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .charge-wrap {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .charge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.92rem;
+    }
+
+    .charge-bar {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .charge-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background:
+        linear-gradient(90deg, rgba(124, 245, 255, 0.95), rgba(255, 95, 210, 0.9));
+      box-shadow: 0 0 18px rgba(124, 245, 255, 0.52);
+      transition: width 120ms linear;
+    }
+
+    .status-line {
+      min-height: 1.25em;
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .board {
+      top: 18px;
+      right: 18px;
+      width: min(260px, calc(100vw - 36px));
+      padding: 14px 14px 12px;
+      border-radius: 24px;
+    }
+
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .board-title {
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .board-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.76rem;
+      color: var(--text);
+    }
+
+    .leaderboard {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .leaderboard li {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.92rem;
+    }
+
+    .leaderboard strong {
+      letter-spacing: -0.02em;
+    }
+
+    .board-sub {
+      margin: 10px 0 0;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+
+    .control-bar {
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      padding: 14px 16px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .control-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .control-copy p {
+      margin: 0;
+    }
+
+    .control-copy strong {
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 800;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 28px rgba(0, 0, 0, 0.26);
+      border-color: rgba(124, 245, 255, 0.28);
+    }
+
+    button.primary {
+      color: #0b1020;
+      background: linear-gradient(135deg, var(--accent), #aef8ff 52%, var(--accent-3));
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    button.secondary {
+      background: linear-gradient(135deg, rgba(255, 95, 210, 0.16), rgba(255, 255, 255, 0.05));
+    }
+
+    button.ghost {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .touch-controls {
+      position: absolute;
+      right: 18px;
+      bottom: 112px;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .touch-controls button {
+      min-width: 124px;
+      justify-content: center;
+      backdrop-filter: blur(14px);
+    }
+
+    .touch-controls button.active {
+      border-color: rgba(124, 245, 255, 0.6);
+      box-shadow: 0 0 0 2px rgba(124, 245, 255, 0.16), 0 16px 28px rgba(0, 0, 0, 0.3);
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(3, 5, 10, 0.54);
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .hero-card {
+      width: min(620px, 100%);
+      padding: 28px 28px 24px;
+      border-radius: 32px;
+      background:
+        radial-gradient(circle at top right, rgba(124, 245, 255, 0.16), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(255, 95, 210, 0.14), transparent 34%),
+        var(--panel-strong);
+      border: 1px solid rgba(124, 245, 255, 0.18);
+      box-shadow: 0 34px 80px rgba(0, 0, 0, 0.44);
+    }
+
+    .hero-card h2 {
+      margin: 6px 0 10px;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 0.9;
+      letter-spacing: -0.06em;
+    }
+
+    .hero-card p {
+      margin: 10px 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin: 18px 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .feature-list li {
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .tiny {
+      margin-top: 16px;
+      font-size: 0.88rem;
+      color: rgba(156, 181, 211, 0.9);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .board {
+        top: auto;
+        right: 18px;
+        bottom: 170px;
+        width: min(230px, calc(100vw - 36px));
+      }
+
+      .control-bar {
+        padding-bottom: 18px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .stats,
+      .board,
+      .control-bar {
+        left: 12px;
+        right: 12px;
+        width: auto;
+      }
+
+      .stats {
+        top: 12px;
+      }
+
+      .board {
+        top: auto;
+        bottom: 176px;
+      }
+
+      .control-bar {
+        bottom: 12px;
+      }
+
+      .touch-controls {
+        right: 12px;
+        bottom: 212px;
+      }
+
+      .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .hero-card {
+        padding: 22px 20px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <canvas id="gameCanvas" aria-label="Neon Snake Arena"></canvas>
+
+    <section class="panel stats" aria-live="polite">
+      <div class="brand-row">
+        <div>
+          <p class="eyebrow">html-apps / new run</p>
+          <h1>Neon Snake Arena</h1>
+        </div>
+        <span class="tag" id="tagText">Pulse laden</span>
+      </div>
+
+      <div class="stat-grid">
+        <article class="stat-card">
+          <p class="stat-label">Score</p>
+          <p class="stat-value" id="scoreValue">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Best</p>
+          <p class="stat-value" id="bestValue">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Laenge</p>
+          <p class="stat-value" id="lengthValue">0</p>
+        </article>
+      </div>
+
+      <div class="charge-wrap">
+        <div class="charge-row">
+          <strong>Magnet-Pulse</strong>
+          <span id="chargeText">0%</span>
+        </div>
+        <div class="charge-bar">
+          <div class="charge-fill" id="chargeFill"></div>
+        </div>
+      </div>
+
+      <p class="status-line" id="statusLine">Zieh Linien knapp an Rivalen vorbei, um den Pulse schneller zu laden.</p>
+    </section>
+
+    <aside class="panel board">
+      <div class="board-header">
+        <p class="board-title">Arena Top 5</p>
+        <span class="board-pill" id="rivalsPill">8 Rivalen</span>
+      </div>
+      <ol class="leaderboard" id="leaderboardList"></ol>
+      <p class="board-sub" id="boardSub">Klein kann gross besiegen. Timing gewinnt.</p>
+    </aside>
+
+    <section class="panel control-bar">
+      <div class="control-copy">
+        <p><strong>Move:</strong> Maus, Touch oder `WASD` / Pfeile</p>
+        <p><strong>Boost:</strong> `Space` halten. <strong>Pulse:</strong> `F`, wenn voll geladen.</p>
+      </div>
+      <div class="button-row">
+        <button class="ghost" id="pauseBtn" type="button">Pause</button>
+        <button class="secondary" id="pulseBtn" type="button">Pulse</button>
+        <button class="primary" id="restartBtn" type="button">Neu starten</button>
+      </div>
+    </section>
+
+    <div class="touch-controls">
+      <button class="secondary" id="boostTouchBtn" type="button">Boost halten</button>
+      <button class="ghost" id="pulseTouchBtn" type="button">Pulse</button>
+    </div>
+
+    <section class="overlay visible" id="overlay">
+      <div class="hero-card">
+        <p class="eyebrow" id="overlayEyebrow">Snake, aber nicht retro-brav</p>
+        <h2 id="overlayTitle">Neon Snake Arena</h2>
+        <p id="overlayCopy">Ich habe die coolste aktuelle Snake-Richtung auf GitHub Pages heruntergebrochen: Arena-Druck wie `.io`-Snake, Boosting, riskante Drive-bys entlang fremder Linien und eine starke eigene Optik.</p>
+        <ul class="feature-list">
+          <li><strong>Boost:</strong> Kurz sprinten, um Luecken zu schneiden oder Beute zu sichern.</li>
+          <li><strong>Line Charge:</strong> Dicht an Gegnern vorbeiziehen, um deinen Magnet-Pulse zu laden.</li>
+          <li><strong>Offline Arena:</strong> KI-Rivalen bringen echtes `io`-Gefuehl, ganz ohne Backend.</li>
+        </ul>
+        <div class="hero-actions">
+          <button class="primary" id="startBtn" type="button">Run starten</button>
+          <button class="ghost" id="overlayRestartBtn" type="button">Neu auswerfen</button>
+        </div>
+        <p class="tiny" id="overlayFoot">Auf Touchgeraeten steuerst du direkt ueber den Screen. Die beiden Buttons rechts geben dir Boost und Pulse.</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const scoreValue = document.getElementById("scoreValue");
+    const bestValue = document.getElementById("bestValue");
+    const lengthValue = document.getElementById("lengthValue");
+    const chargeText = document.getElementById("chargeText");
+    const chargeFill = document.getElementById("chargeFill");
+    const statusLine = document.getElementById("statusLine");
+    const tagText = document.getElementById("tagText");
+    const rivalsPill = document.getElementById("rivalsPill");
+    const boardSub = document.getElementById("boardSub");
+    const leaderboardList = document.getElementById("leaderboardList");
+    const overlay = document.getElementById("overlay");
+    const overlayEyebrow = document.getElementById("overlayEyebrow");
+    const overlayTitle = document.getElementById("overlayTitle");
+    const overlayCopy = document.getElementById("overlayCopy");
+    const overlayFoot = document.getElementById("overlayFoot");
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const overlayRestartBtn = document.getElementById("overlayRestartBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const pulseBtn = document.getElementById("pulseBtn");
+    const pulseTouchBtn = document.getElementById("pulseTouchBtn");
+    const boostTouchBtn = document.getElementById("boostTouchBtn");
+
+    const TAU = Math.PI * 2;
+    const ARENA_RADIUS = 1100;
+    const BEST_KEY = "neon-snake-arena-best";
+    const BOT_TARGET = 8;
+    const VIEW = { width: window.innerWidth, height: window.innerHeight, dpr: 1 };
+    const pointer = { active: false, x: window.innerWidth / 2, y: window.innerHeight / 2, boost: false };
+    const keys = Object.create(null);
+    const botNames = ["Ion", "Rift", "Nova", "Flux", "Glint", "Echo", "Vex", "Prism", "Kite", "Volt", "Drift", "Pixel"];
+    const palettes = [
+      { core: "#7cf5ff", highlight: "#d9ffff", shadow: "rgba(124, 245, 255, 0.24)" },
+      { core: "#ff5fd2", highlight: "#ffd8f3", shadow: "rgba(255, 95, 210, 0.24)" },
+      { core: "#ffd166", highlight: "#fff0bf", shadow: "rgba(255, 209, 102, 0.24)" },
+      { core: "#8fff85", highlight: "#edffe3", shadow: "rgba(143, 255, 133, 0.22)" },
+      { core: "#7a8dff", highlight: "#e0e5ff", shadow: "rgba(122, 141, 255, 0.22)" },
+      { core: "#ff8b6b", highlight: "#ffe0d5", shadow: "rgba(255, 139, 107, 0.22)" }
+    ];
+
+    let game = null;
+    let lastFrame = 0;
+    let pulseQueued = false;
+    let bestScore = loadBest();
+    let overlayMode = "intro";
+
+    function loadBest() {
+      try {
+        return Number(localStorage.getItem(BEST_KEY)) || 0;
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    function saveBest(value) {
+      bestScore = Math.max(bestScore, Math.floor(value));
+      try {
+        localStorage.setItem(BEST_KEY, String(bestScore));
+      } catch (error) {
+        // Ignore storage failures and keep the current run playable.
+      }
+    }
+
+    function resizeCanvas() {
+      VIEW.width = window.innerWidth;
+      VIEW.height = window.innerHeight;
+      VIEW.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(VIEW.width * VIEW.dpr);
+      canvas.height = Math.floor(VIEW.height * VIEW.dpr);
+      canvas.style.width = VIEW.width + "px";
+      canvas.style.height = VIEW.height + "px";
+      ctx.setTransform(VIEW.dpr, 0, 0, VIEW.dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+    }
+
+    function rand(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function angleLerp(current, target, maxStep) {
+      let delta = ((target - current + Math.PI * 3) % TAU) - Math.PI;
+      if (Math.abs(delta) <= maxStep) {
+        return target;
+      }
+      return current + Math.sign(delta) * maxStep;
+    }
+
+    function dist(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function randomPoint(margin = 0) {
+      const angle = Math.random() * TAU;
+      const radius = Math.sqrt(Math.random()) * (ARENA_RADIUS - margin);
+      return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+    }
+
+    function paletteFor(index) {
+      return palettes[index % palettes.length];
+    }
+
+    function createSnake({ name, isBot, paletteIndex, x, y, angle, length, score }) {
+      const palette = paletteFor(paletteIndex);
+      const snake = {
+        id: Math.random().toString(36).slice(2),
+        name,
+        isBot,
+        x,
+        y,
+        dir: angle,
+        desiredDir: angle,
+        body: [],
+        palette,
+        radius: isBot ? 9.5 : 10.5,
+        baseSpeed: isBot ? rand(160, 178) : 180,
+        boostSpeed: isBot ? rand(235, 258) : 286,
+        turnRate: isBot ? rand(2.4, 3.1) : 3.55,
+        targetLength: length,
+        minLength: 120,
+        boostCost: isBot ? 18 : 22,
+        score,
+        alive: true,
+        boosting: false,
+        charge: isBot ? 0 : 0,
+        pulse: 0,
+        boostDropClock: 0,
+        aiTarget: null,
+        aiRetarget: 0,
+        aiBoostClock: 0,
+        spawnBlink: 0.65
+      };
+
+      for (let i = 0; i < 22; i += 1) {
+        const step = i * 12;
+        snake.body.push({
+          x: x - Math.cos(angle) * step,
+          y: y - Math.sin(angle) * step
+        });
+      }
+
+      trimBody(snake);
+      return snake;
+    }
+
+    function trimBody(snake) {
+      if (snake.body.length < 2) {
+        return;
+      }
+
+      const trimmed = [snake.body[0]];
+      let remaining = snake.targetLength;
+
+      for (let i = 1; i < snake.body.length; i += 1) {
+        const prev = trimmed[trimmed.length - 1];
+        const point = snake.body[i];
+        const segment = Math.hypot(point.x - prev.x, point.y - prev.y);
+
+        if (!Number.isFinite(segment) || segment <= 0.001) {
+          continue;
+        }
+
+        if (remaining > segment) {
+          trimmed.push(point);
+          remaining -= segment;
+          continue;
+        }
+
+        const ratio = clamp(remaining / segment, 0, 1);
+        trimmed.push({
+          x: prev.x + (point.x - prev.x) * ratio,
+          y: prev.y + (point.y - prev.y) * ratio
+        });
+        remaining = 0;
+        break;
+      }
+
+      snake.body = trimmed;
+    }
+
+    function spawnPellet(type = "fruit", origin = null) {
+      const point = origin || randomPoint(44);
+      const pellet = {
+        x: point.x,
+        y: point.y,
+        vx: 0,
+        vy: 0,
+        type,
+        radius: 7,
+        value: 5,
+        color: "#7cf5ff",
+        glow: "rgba(124, 245, 255, 0.35)",
+        wobble: Math.random() * TAU
+      };
+
+      if (type === "fruit") {
+        const palette = paletteFor(Math.floor(Math.random() * palettes.length));
+        pellet.radius = rand(5.5, 8.5);
+        pellet.value = Math.round(rand(5, 9));
+        pellet.color = palette.core;
+        pellet.glow = palette.shadow;
+      } else if (type === "boost") {
+        pellet.radius = rand(4.4, 6.2);
+        pellet.value = 3;
+        pellet.color = "#ffb4ea";
+        pellet.glow = "rgba(255, 95, 210, 0.34)";
+      } else if (type === "charge") {
+        pellet.radius = 9.5;
+        pellet.value = 7;
+        pellet.color = "#fff09e";
+        pellet.glow = "rgba(255, 209, 102, 0.36)";
+      } else if (type === "nova") {
+        pellet.radius = 10.5;
+        pellet.value = 10;
+        pellet.color = "#b4ffea";
+        pellet.glow = "rgba(115, 255, 167, 0.42)";
+      }
+
+      game.pellets.push(pellet);
+    }
+
+    function ensurePellets() {
+      while (game.pellets.length < 240) {
+        const typeRoll = Math.random();
+        const type = typeRoll > 0.965 ? "charge" : "fruit";
+        spawnPellet(type);
+      }
+    }
+
+    function spawnBot() {
+      const name = botNames[Math.floor(Math.random() * botNames.length)] + "-" + String(Math.floor(rand(10, 99)));
+      const point = randomPoint(200);
+      const angle = Math.random() * TAU;
+      const snake = createSnake({
+        name,
+        isBot: true,
+        paletteIndex: Math.floor(Math.random() * palettes.length),
+        x: point.x,
+        y: point.y,
+        angle,
+        length: rand(140, 210),
+        score: Math.floor(rand(12, 40))
+      });
+      game.snakes.push(snake);
+      return snake;
+    }
+
+    function setupRun() {
+      game = {
+        running: true,
+        paused: false,
+        over: false,
+        time: 0,
+        cameraX: 0,
+        cameraY: 0,
+        pellets: [],
+        snakes: [],
+        status: "Lade den Pulse an fremden Linien auf.",
+        boardHint: "Klein kann gross besiegen. Timing gewinnt.",
+        nearChargeFlash: 0,
+        botRespawnTimer: 0
+      };
+
+      const player = createSnake({
+        name: "You",
+        isBot: false,
+        paletteIndex: 0,
+        x: 0,
+        y: 0,
+        angle: -Math.PI / 2,
+        length: 190,
+        score: 0
+      });
+
+      game.player = player;
+      game.snakes.push(player);
+
+      for (let i = 0; i < 260; i += 1) {
+        spawnPellet(Math.random() > 0.97 ? "charge" : "fruit");
+      }
+
+      for (let i = 0; i < BOT_TARGET; i += 1) {
+        spawnBot();
+      }
+
+      updateHud();
+      updateOverlay("playing");
+      hideOverlay();
+    }
+
+    function showOverlay() {
+      overlay.classList.add("visible");
+    }
+
+    function hideOverlay() {
+      overlay.classList.remove("visible");
+    }
+
+    function updateOverlay(mode) {
+      overlayMode = mode;
+      if (mode === "intro") {
+        overlayEyebrow.textContent = "Snake, aber nicht retro-brav";
+        overlayTitle.textContent = "Neon Snake Arena";
+        overlayCopy.textContent = "Ich habe die coolste aktuelle Snake-Richtung auf GitHub Pages heruntergebrochen: Arena-Druck wie .io-Snake, Boosting, riskante Drive-bys entlang fremder Linien und eine starke eigene Optik.";
+        overlayFoot.textContent = "Auf Touchgeraeten steuerst du direkt ueber den Screen. Die beiden Buttons rechts geben dir Boost und Pulse.";
+        startBtn.textContent = "Run starten";
+        overlayRestartBtn.textContent = "Neu auswerfen";
+      } else if (mode === "playing") {
+        overlayEyebrow.textContent = "Lauf laeuft";
+        overlayTitle.textContent = "Bleib klein. Spiel schlau.";
+        overlayCopy.textContent = "Sobald du startest, verschwindet diese Karte. Dein Magnet-Pulse kommt am schnellsten, wenn du bewusst knapp an Rivalen vorbeifaehrst.";
+        overlayFoot.textContent = "Boost frisst Laenge, bringt dir aber Winkel, Kills und sichere Futterlinien.";
+        startBtn.textContent = "Weiter";
+        overlayRestartBtn.textContent = "Neu starten";
+      } else if (mode === "paused") {
+        overlayEyebrow.textContent = "Run pausiert";
+        overlayTitle.textContent = "Ein kurzer Blick aufs Feld";
+        overlayCopy.textContent = "Der Hauptbutton setzt den aktuellen Lauf fort. Wenn du lieber neu aufsetzt, nimm die zweite Aktion und du bekommst eine frische Arena.";
+        overlayFoot.textContent = "Auf den naechsten Metern lohnt oft eher ein enger Drive-by als blinder Boost nach vorn.";
+        startBtn.textContent = "Weiter";
+        overlayRestartBtn.textContent = "Neu starten";
+      } else if (mode === "gameover") {
+        overlayEyebrow.textContent = "Run vorbei";
+        overlayTitle.textContent = "Neon aus. Nochmal?";
+        overlayCopy.textContent = "Score " + Math.floor(game.player.score) + ", Laenge " + Math.floor(game.player.targetLength) + ", Best " + bestScore + ". Die gute Runde beginnt oft mit einem mutigen First Cut, nicht mit Vorsicht.";
+        overlayFoot.textContent = "Restart wirft sofort eine neue Arena mit frischen Rivalen aus.";
+        startBtn.textContent = "Nochmal";
+        overlayRestartBtn.textContent = "Frische Arena";
+      }
+    }
+
+    function setStatus(text) {
+      if (game) {
+        game.status = text;
+      }
+    }
+
+    function activatePulse() {
+      if (!game || !game.player.alive) {
+        return;
+      }
+      const player = game.player;
+      if (player.charge < 100 || player.pulse > 0) {
+        return;
+      }
+      player.charge = 0;
+      player.pulse = 3.6;
+      game.boardHint = "Pulse aktiv: Nahrung wird magnetisch, du kannst Runs brutal kippen.";
+      setStatus("Magnet-Pulse online. Sammle jetzt aggressiv.");
+    }
+
+    function killSnake(snake, reason, killer = null) {
+      if (!snake.alive) {
+        return;
+      }
+
+      snake.alive = false;
+      snake.boosting = false;
+
+      for (let i = 2; i < snake.body.length; i += 2) {
+        const point = snake.body[i];
+        spawnPellet("fruit", { x: point.x + rand(-8, 8), y: point.y + rand(-8, 8) });
+        if (Math.random() > 0.78) {
+          spawnPellet("boost", { x: point.x + rand(-10, 10), y: point.y + rand(-10, 10) });
+        }
+      }
+
+      if (Math.random() > 0.45) {
+        spawnPellet("nova", { x: snake.x, y: snake.y });
+      }
+
+      if (killer && killer.alive) {
+        killer.score += snake.isBot ? 35 : 80;
+        killer.targetLength += snake.isBot ? 34 : 54;
+        if (!killer.isBot) {
+          setStatus("Kill auf " + snake.name + ". Feld kontrollieren und einsammeln.");
+          game.boardHint = "Sauberer Cut. Jetzt die Explosion fressen, bevor die Arena sie schnappt.";
+        }
+      } else if (!snake.isBot && reason === "wall") {
+        setStatus("Zu weit rausgedriftet. Der Ring bestraft Gier.");
+      }
+
+      if (!snake.isBot) {
+        game.running = false;
+        game.over = true;
+        saveBest(game.player.score);
+        updateHud();
+        updateOverlay("gameover");
+        showOverlay();
+      }
+    }
+
+    function chooseBotTarget(snake) {
+      let bestTarget = null;
+      let bestScoreValue = -Infinity;
+
+      for (let i = 0; i < game.pellets.length; i += 1) {
+        const pellet = game.pellets[i];
+        const dx = pellet.x - snake.x;
+        const dy = pellet.y - snake.y;
+        const distance = Math.hypot(dx, dy);
+        const weight = pellet.value * 12 - distance * 0.06 + (pellet.type === "charge" ? 18 : 0);
+        if (weight > bestScoreValue) {
+          bestScoreValue = weight;
+          bestTarget = pellet;
+        }
+      }
+
+      if (!bestTarget) {
+        const fallback = randomPoint(120);
+        return { x: fallback.x, y: fallback.y };
+      }
+
+      return { x: bestTarget.x, y: bestTarget.y };
+    }
+
+    function steeringVectorForBot(snake) {
+      snake.aiRetarget -= 1;
+      if (!snake.aiTarget || snake.aiRetarget <= 0 || Math.random() > 0.985) {
+        snake.aiTarget = chooseBotTarget(snake);
+        snake.aiRetarget = Math.floor(rand(15, 44));
+      }
+
+      let vx = snake.aiTarget.x - snake.x;
+      let vy = snake.aiTarget.y - snake.y;
+
+      const distToCenter = Math.hypot(snake.x, snake.y);
+      const borderGap = ARENA_RADIUS - distToCenter;
+      if (borderGap < 220) {
+        const pull = (220 - borderGap) * 3.8;
+        vx += -snake.x * pull;
+        vy += -snake.y * pull;
+      }
+
+      for (let s = 0; s < game.snakes.length; s += 1) {
+        const other = game.snakes[s];
+        if (!other.alive) {
+          continue;
+        }
+        const startIndex = other === snake ? 10 : 4;
+        for (let i = startIndex; i < other.body.length; i += 3) {
+          const point = other.body[i];
+          const dx = point.x - snake.x;
+          const dy = point.y - snake.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance > 130 || distance < 0.001) {
+            continue;
+          }
+
+          const forward = Math.cos(snake.dir) * dx + Math.sin(snake.dir) * dy;
+          if (forward < -24) {
+            continue;
+          }
+
+          const repel = (130 - distance) / 130;
+          vx -= (dx / distance) * repel * 420;
+          vy -= (dy / distance) * repel * 420;
+        }
+      }
+
+      if (Math.abs(vx) < 0.001 && Math.abs(vy) < 0.001) {
+        vx = Math.cos(snake.dir);
+        vy = Math.sin(snake.dir);
+      }
+
+      return Math.atan2(vy, vx);
+    }
+
+    function updatePlayerIntent(player) {
+      let intentX = 0;
+      let intentY = 0;
+
+      if (keys.ArrowLeft || keys.KeyA) {
+        intentX -= 1;
+      }
+      if (keys.ArrowRight || keys.KeyD) {
+        intentX += 1;
+      }
+      if (keys.ArrowUp || keys.KeyW) {
+        intentY -= 1;
+      }
+      if (keys.ArrowDown || keys.KeyS) {
+        intentY += 1;
+      }
+
+      if (pointer.active) {
+        intentX = pointer.x - VIEW.width / 2;
+        intentY = pointer.y - VIEW.height / 2;
+      }
+
+      if (Math.abs(intentX) > 0.01 || Math.abs(intentY) > 0.01) {
+        player.desiredDir = Math.atan2(intentY, intentX);
+      }
+
+      player.boosting = !!(keys.Space || pointer.boost);
+    }
+
+    function updateSnakeMovement(snake, dt) {
+      if (!snake.alive) {
+        return;
+      }
+
+      if (snake.isBot) {
+        snake.desiredDir = steeringVectorForBot(snake);
+        snake.aiBoostClock -= dt;
+        const safeToBoost = snake.targetLength > snake.minLength + 18 && Math.random() > 0.992;
+        if (snake.aiBoostClock <= 0 && safeToBoost) {
+          snake.boosting = true;
+          snake.aiBoostClock = rand(0.12, 0.42);
+        } else if (snake.aiBoostClock <= 0) {
+          snake.boosting = false;
+        }
+      } else {
+        updatePlayerIntent(snake);
+      }
+
+      snake.dir = angleLerp(snake.dir, snake.desiredDir, snake.turnRate * dt);
+
+      const boosting = snake.boosting && snake.targetLength > snake.minLength + 10;
+      const speed = boosting ? snake.boostSpeed : snake.baseSpeed;
+      snake.x += Math.cos(snake.dir) * speed * dt;
+      snake.y += Math.sin(snake.dir) * speed * dt;
+      snake.body.unshift({ x: snake.x, y: snake.y });
+
+      if (boosting) {
+        snake.targetLength = Math.max(snake.minLength, snake.targetLength - snake.boostCost * dt);
+        snake.boostDropClock += dt;
+        if (snake.boostDropClock >= 0.05) {
+          snake.boostDropClock = 0;
+          const tail = snake.body[snake.body.length - 1];
+          spawnPellet("boost", {
+            x: tail.x + rand(-10, 10),
+            y: tail.y + rand(-10, 10)
+          });
+        }
+      } else {
+        snake.boostDropClock = 0;
+      }
+
+      snake.spawnBlink = Math.max(0, snake.spawnBlink - dt);
+      snake.pulse = Math.max(0, snake.pulse - dt);
+      trimBody(snake);
+    }
+
+    function chargeFromRisk(dt) {
+      const player = game.player;
+      if (!player.alive) {
+        return;
+      }
+
+      let charging = false;
+      for (let s = 0; s < game.snakes.length; s += 1) {
+        const snake = game.snakes[s];
+        if (!snake.alive || snake === player) {
+          continue;
+        }
+
+        for (let i = 4; i < snake.body.length; i += 3) {
+          const point = snake.body[i];
+          const distance = Math.hypot(point.x - player.x, point.y - player.y);
+          if (distance > 78 || distance < player.radius + 5) {
+            continue;
+          }
+          charging = true;
+          break;
+        }
+
+        if (charging) {
+          break;
+        }
+      }
+
+      if (charging) {
+        player.charge = clamp(player.charge + dt * 26, 0, 100);
+        game.nearChargeFlash = 0.18;
+        if (player.charge >= 100) {
+          setStatus("Pulse bereit. F zünden und Feld einsammeln.");
+          game.boardHint = "Pulse bereit. Jetzt Kill oder Futterballon erzwingen.";
+        } else {
+          setStatus("Line Charge: mutig nah dran bleiben.");
+        }
+      }
+    }
+
+    function updatePellets(dt) {
+      const player = game.player;
+      const pulseActive = player.alive && player.pulse > 0;
+
+      for (let i = game.pellets.length - 1; i >= 0; i -= 1) {
+        const pellet = game.pellets[i];
+        pellet.wobble += dt * 1.6;
+        pellet.vx *= 0.96;
+        pellet.vy *= 0.96;
+
+        if (pulseActive) {
+          const dx = player.x - pellet.x;
+          const dy = player.y - pellet.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance < 280 && distance > 0.001) {
+            const pull = (280 - distance) / 280;
+            pellet.vx += (dx / distance) * pull * 240 * dt;
+            pellet.vy += (dy / distance) * pull * 240 * dt;
+          }
+        }
+
+        pellet.x += pellet.vx * dt;
+        pellet.y += pellet.vy * dt;
+
+        const centerDistance = Math.hypot(pellet.x, pellet.y);
+        if (centerDistance > ARENA_RADIUS - 12) {
+          const pullBack = (centerDistance - (ARENA_RADIUS - 12)) / centerDistance;
+          pellet.x -= pellet.x * pullBack;
+          pellet.y -= pellet.y * pullBack;
+        }
+
+        for (let s = 0; s < game.snakes.length; s += 1) {
+          const snake = game.snakes[s];
+          if (!snake.alive) {
+            continue;
+          }
+
+          const d = Math.hypot(pellet.x - snake.x, pellet.y - snake.y);
+          if (d > snake.radius + pellet.radius + 2) {
+            continue;
+          }
+
+          snake.targetLength += pellet.value * (pellet.type === "boost" ? 1.3 : 1.7);
+          snake.score += pellet.type === "charge" ? 9 : pellet.value;
+
+          if (!snake.isBot) {
+            if (pellet.type === "charge") {
+              snake.charge = clamp(snake.charge + 24, 0, 100);
+              setStatus("Charge-Kern eingesammelt. Pulse steigt.");
+            } else if (pellet.type === "nova") {
+              snake.charge = clamp(snake.charge + 12, 0, 100);
+              setStatus("Nova-Burst. Dicke Beute, direkt weiterschieben.");
+            }
+          }
+
+          game.pellets.splice(i, 1);
+          break;
+        }
+      }
+    }
+
+    function collisionForSnake(snake) {
+      if (!snake.alive) {
+        return null;
+      }
+
+      if (Math.hypot(snake.x, snake.y) > ARENA_RADIUS - snake.radius) {
+        return { type: "wall", owner: null };
+      }
+
+      for (let s = 0; s < game.snakes.length; s += 1) {
+        const other = game.snakes[s];
+        if (!other.alive) {
+          continue;
+        }
+
+        const startIndex = other === snake ? 12 : 4;
+        for (let i = startIndex; i < other.body.length; i += 2) {
+          const point = other.body[i];
+          const distance = Math.hypot(point.x - snake.x, point.y - snake.y);
+          if (distance < snake.radius + (other.radius * 0.9)) {
+            return { type: "body", owner: other };
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function updateWorld(dt) {
+      if (!game.running || game.paused || game.over) {
+        return;
+      }
+
+      game.time += dt;
+      ensurePellets();
+
+      if (pulseQueued) {
+        activatePulse();
+        pulseQueued = false;
+      }
+
+      for (let i = 0; i < game.snakes.length; i += 1) {
+        updateSnakeMovement(game.snakes[i], dt);
+      }
+
+      chargeFromRisk(dt);
+      updatePellets(dt);
+
+      for (let i = 0; i < game.snakes.length; i += 1) {
+        const snake = game.snakes[i];
+        const collision = collisionForSnake(snake);
+        if (collision) {
+          const killer = collision.owner && collision.owner !== snake ? collision.owner : null;
+          killSnake(snake, collision.type, killer);
+        }
+      }
+
+      game.snakes = game.snakes.filter((snake) => snake.alive || snake === game.player);
+
+      const livingBots = game.snakes.filter((snake) => snake.alive && snake.isBot).length;
+      if (livingBots < BOT_TARGET && !game.over) {
+        game.botRespawnTimer -= dt;
+        if (game.botRespawnTimer <= 0) {
+          spawnBot();
+          game.botRespawnTimer = 1.15;
+        }
+      } else {
+        game.botRespawnTimer = 0.6;
+      }
+
+      game.nearChargeFlash = Math.max(0, game.nearChargeFlash - dt);
+      game.cameraX += (game.player.x - game.cameraX) * Math.min(1, dt * 5.5);
+      game.cameraY += (game.player.y - game.cameraY) * Math.min(1, dt * 5.5);
+
+      if (game.player.alive && game.player.score > bestScore) {
+        saveBest(game.player.score);
+      }
+
+      updateHud();
+    }
+
+    function drawBackdrop() {
+      ctx.clearRect(0, 0, VIEW.width, VIEW.height);
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, VIEW.height);
+      gradient.addColorStop(0, "#04020a");
+      gradient.addColorStop(0.56, "#120822");
+      gradient.addColorStop(1, "#1b1140");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, VIEW.width, VIEW.height);
+
+      for (let i = 0; i < 80; i += 1) {
+        const starX = (i * 127 + Math.sin(i * 4.7 + game.cameraX * 0.001) * 40) % VIEW.width;
+        const starY = (i * 89 + Math.cos(i * 3.2 + game.cameraY * 0.001) * 38) % VIEW.height;
+        const size = (i % 5 === 0 ? 2.2 : 1.1);
+        ctx.fillStyle = i % 7 === 0 ? "rgba(255, 209, 102, 0.75)" : "rgba(220, 236, 255, 0.48)";
+        ctx.fillRect(starX, starY, size, size);
+      }
+    }
+
+    function worldToScreen(x, y) {
+      return {
+        x: x - game.cameraX + VIEW.width / 2,
+        y: y - game.cameraY + VIEW.height / 2
+      };
+    }
+
+    function drawArena() {
+      const center = worldToScreen(0, 0);
+
+      const ring = ctx.createRadialGradient(center.x, center.y, 120, center.x, center.y, ARENA_RADIUS + 220);
+      ring.addColorStop(0, "rgba(20, 14, 42, 0.62)");
+      ring.addColorStop(0.66, "rgba(14, 10, 28, 0.18)");
+      ring.addColorStop(1, "rgba(11, 8, 22, 0)");
+      ctx.fillStyle = ring;
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, ARENA_RADIUS + 220, 0, TAU);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, ARENA_RADIUS, 0, TAU);
+      ctx.fillStyle = "rgba(12, 10, 30, 0.7)";
+      ctx.fill();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, ARENA_RADIUS, 0, TAU);
+      ctx.clip();
+
+      ctx.strokeStyle = "rgba(124, 245, 255, 0.07)";
+      ctx.lineWidth = 1;
+      for (let x = -ARENA_RADIUS; x <= ARENA_RADIUS; x += 96) {
+        const a = worldToScreen(x, -ARENA_RADIUS);
+        const b = worldToScreen(x, ARENA_RADIUS);
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+      for (let y = -ARENA_RADIUS; y <= ARENA_RADIUS; y += 96) {
+        const a = worldToScreen(-ARENA_RADIUS, y);
+        const b = worldToScreen(ARENA_RADIUS, y);
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, ARENA_RADIUS, 0, TAU);
+      ctx.lineWidth = 16;
+      ctx.strokeStyle = "rgba(255, 95, 210, 0.08)";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, ARENA_RADIUS, 0, TAU);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = game.nearChargeFlash > 0 ? "rgba(255, 209, 102, 0.88)" : "rgba(124, 245, 255, 0.52)";
+      ctx.shadowBlur = 24;
+      ctx.shadowColor = game.nearChargeFlash > 0 ? "rgba(255, 209, 102, 0.58)" : "rgba(124, 245, 255, 0.38)";
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawPellets() {
+      for (let i = 0; i < game.pellets.length; i += 1) {
+        const pellet = game.pellets[i];
+        const pos = worldToScreen(pellet.x, pellet.y);
+        const radius = pellet.radius + Math.sin(pellet.wobble) * 0.35;
+
+        ctx.beginPath();
+        ctx.fillStyle = pellet.glow;
+        ctx.arc(pos.x, pos.y, radius * 2.8, 0, TAU);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = pellet.color;
+        ctx.arc(pos.x, pos.y, radius, 0, TAU);
+        ctx.fill();
+      }
+    }
+
+    function drawSnake(snake) {
+      if (!snake.alive || snake.body.length < 2) {
+        return;
+      }
+
+      ctx.save();
+
+      if (snake.spawnBlink > 0) {
+        ctx.globalAlpha = 0.65 + Math.sin(game.time * 40) * 0.18;
+      }
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      ctx.beginPath();
+      for (let i = 0; i < snake.body.length; i += 1) {
+        const point = worldToScreen(snake.body[i].x, snake.body[i].y);
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      }
+      ctx.strokeStyle = snake.palette.shadow;
+      ctx.lineWidth = snake.radius * 2.8;
+      ctx.shadowBlur = snake === game.player ? 26 : 16;
+      ctx.shadowColor = snake.palette.core;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.beginPath();
+      for (let i = 0; i < snake.body.length; i += 1) {
+        const point = worldToScreen(snake.body[i].x, snake.body[i].y);
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      }
+      ctx.strokeStyle = snake.palette.core;
+      ctx.lineWidth = snake.radius * 1.7;
+      ctx.stroke();
+
+      ctx.beginPath();
+      for (let i = 0; i < snake.body.length; i += 1) {
+        const point = worldToScreen(snake.body[i].x, snake.body[i].y);
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      }
+      ctx.strokeStyle = snake.palette.highlight;
+      ctx.globalAlpha = snake === game.player ? 0.58 : 0.35;
+      ctx.lineWidth = snake.radius * 0.7;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      const head = worldToScreen(snake.x, snake.y);
+      ctx.beginPath();
+      ctx.fillStyle = snake.palette.core;
+      ctx.arc(head.x, head.y, snake.radius * 1.08, 0, TAU);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.fillStyle = snake.palette.highlight;
+      ctx.arc(
+        head.x + Math.cos(snake.dir) * snake.radius * 0.28,
+        head.y + Math.sin(snake.dir) * snake.radius * 0.28,
+        snake.radius * 0.42,
+        0,
+        TAU
+      );
+      ctx.fill();
+
+      if (snake === game.player && snake.pulse > 0) {
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(255, 209, 102, 0.72)";
+        ctx.lineWidth = 3;
+        ctx.arc(head.x, head.y, 26 + Math.sin(game.time * 16) * 4, 0, TAU);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function roundedRectPath(x, y, width, height, radius) {
+      const safeRadius = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + safeRadius, y);
+      ctx.arcTo(x + width, y, x + width, y + height, safeRadius);
+      ctx.arcTo(x + width, y + height, x, y + height, safeRadius);
+      ctx.arcTo(x, y + height, x, y, safeRadius);
+      ctx.arcTo(x, y, x + width, y, safeRadius);
+      ctx.closePath();
+    }
+
+    function drawMinimap() {
+      const width = 128;
+      const height = 128;
+      const x = VIEW.width - width - 28;
+      const y = VIEW.height - height - 146;
+
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = "rgba(8, 10, 24, 0.82)";
+      ctx.strokeStyle = "rgba(124, 245, 255, 0.2)";
+      ctx.lineWidth = 1.5;
+      roundedRectPath(x, y, width, height, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      const centerX = x + width / 2;
+      const centerY = y + height / 2;
+      const radius = 48;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, TAU);
+      ctx.fillStyle = "rgba(15, 14, 35, 0.96)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 95, 210, 0.25)";
+      ctx.stroke();
+
+      for (let i = 0; i < game.snakes.length; i += 1) {
+        const snake = game.snakes[i];
+        if (!snake.alive) {
+          continue;
+        }
+        const px = centerX + (snake.x / ARENA_RADIUS) * radius;
+        const py = centerY + (snake.y / ARENA_RADIUS) * radius;
+        ctx.beginPath();
+        ctx.fillStyle = snake === game.player ? "#fff09e" : snake.palette.core;
+        ctx.arc(px, py, snake === game.player ? 4.5 : 3.2, 0, TAU);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawGame() {
+      if (!game) {
+        return;
+      }
+
+      drawBackdrop();
+      drawArena();
+      drawPellets();
+
+      const ordered = [...game.snakes].sort((a, b) => a.targetLength - b.targetLength);
+      for (let i = 0; i < ordered.length; i += 1) {
+        drawSnake(ordered[i]);
+      }
+
+      drawMinimap();
+    }
+
+    function updateHud() {
+      if (!game) {
+        return;
+      }
+
+      const player = game.player;
+      scoreValue.textContent = Math.floor(player.score);
+      bestValue.textContent = String(bestScore);
+      lengthValue.textContent = Math.floor(player.targetLength);
+      chargeText.textContent = Math.floor(player.charge) + "%";
+      chargeFill.style.width = player.charge + "%";
+      statusLine.textContent = game.status;
+      tagText.textContent = player.pulse > 0 ? "Pulse aktiv" : player.charge >= 100 ? "Pulse bereit" : player.boosting ? "Boost aktiv" : "Pulse laden";
+
+      const aliveBots = game.snakes.filter((snake) => snake.alive && snake.isBot).length;
+      rivalsPill.textContent = aliveBots + " Rivalen";
+      boardSub.textContent = game.boardHint;
+
+      const ranking = [...game.snakes]
+        .filter((snake) => snake.alive)
+        .sort((a, b) => b.targetLength - a.targetLength)
+        .slice(0, 5);
+
+      leaderboardList.innerHTML = ranking.map((snake, index) => {
+        const label = snake === player ? "You" : snake.name;
+        const badge = snake === player ? " <strong>(du)</strong>" : "";
+        return "<li><span>" + (index + 1) + ". <strong>" + label + "</strong>" + badge + "</span><span>" + Math.floor(snake.targetLength) + "</span></li>";
+      }).join("");
+    }
+
+    function frame(timestamp) {
+      if (!lastFrame) {
+        lastFrame = timestamp;
+      }
+      const dt = Math.min(0.033, (timestamp - lastFrame) / 1000);
+      lastFrame = timestamp;
+
+      if (game) {
+        updateWorld(dt);
+        drawGame();
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    function requestPulse() {
+      pulseQueued = true;
+    }
+
+    function startNewRun() {
+      setupRun();
+      lastFrame = 0;
+    }
+
+    function handlePrimaryOverlayAction() {
+      if (overlayMode === "playing" || overlayMode === "paused") {
+        if (game && !game.over) {
+          game.paused = false;
+          pauseBtn.textContent = "Pause";
+          setStatus("Zurueck in der Arena.");
+          hideOverlay();
+          return;
+        }
+      }
+
+      startNewRun();
+    }
+
+    function togglePause() {
+      if (!game || game.over) {
+        return;
+      }
+      game.paused = !game.paused;
+      pauseBtn.textContent = game.paused ? "Weiter" : "Pause";
+      setStatus(game.paused ? "Pausiert. Atem holen, dann weiter." : "Zurueck in der Arena.");
+      if (game.paused) {
+        updateOverlay("paused");
+        showOverlay();
+      } else {
+        hideOverlay();
+      }
+    }
+
+    function setBoostButtonState(active) {
+      pointer.boost = active;
+      boostTouchBtn.classList.toggle("active", active);
+    }
+
+    function hookPointerEvents() {
+      const updatePointer = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        pointer.x = event.clientX - rect.left;
+        pointer.y = event.clientY - rect.top;
+      };
+
+      canvas.addEventListener("pointerdown", (event) => {
+        updatePointer(event);
+        pointer.active = true;
+      });
+
+      canvas.addEventListener("pointermove", (event) => {
+        updatePointer(event);
+        pointer.active = true;
+      });
+
+      canvas.addEventListener("pointerleave", () => {
+        if (!("ontouchstart" in window)) {
+          pointer.active = false;
+        }
+      });
+
+      canvas.addEventListener("pointerup", () => {
+        pointer.active = false;
+      });
+    }
+
+    function bindEvents() {
+      window.addEventListener("resize", resizeCanvas);
+
+      document.addEventListener("keydown", (event) => {
+        if (event.code === "Space") {
+          event.preventDefault();
+        }
+        keys[event.code] = true;
+
+        if (event.code === "KeyF") {
+          requestPulse();
+        }
+        if (event.code === "KeyP") {
+          togglePause();
+        }
+      });
+
+      document.addEventListener("keyup", (event) => {
+        keys[event.code] = false;
+      });
+
+      startBtn.addEventListener("click", handlePrimaryOverlayAction);
+      overlayRestartBtn.addEventListener("click", startNewRun);
+      restartBtn.addEventListener("click", startNewRun);
+      pauseBtn.addEventListener("click", togglePause);
+      pulseBtn.addEventListener("click", requestPulse);
+      pulseTouchBtn.addEventListener("click", requestPulse);
+
+      boostTouchBtn.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        setBoostButtonState(true);
+      });
+
+      ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
+        boostTouchBtn.addEventListener(type, () => setBoostButtonState(false));
+      });
+
+      hookPointerEvents();
+    }
+
+    resizeCanvas();
+    bindEvents();
+    updateOverlay("intro");
+    showOverlay();
+    requestAnimationFrame(frame);
+    updateHud();
+  </script>
+</body>
+</html>

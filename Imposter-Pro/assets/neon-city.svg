@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="Neon city artwork">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1f55"/>
+      <stop offset="100%" stop-color="#060711"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7cf4ff"/>
+      <stop offset="100%" stop-color="#9f79ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#sky)"/>
+  <circle cx="910" cy="170" r="110" fill="#ffd88f" opacity="0.9"/>
+  <path d="M0 690L170 560L300 640L420 510L550 610L690 520L840 620L1000 510L1200 680V900H0Z" fill="#0e1330"/>
+  <rect x="120" y="390" width="120" height="260" fill="url(#neon)" opacity="0.72"/>
+  <rect x="290" y="310" width="150" height="340" fill="#293a7f"/>
+  <rect x="480" y="250" width="185" height="410" fill="url(#neon)" opacity="0.56"/>
+  <rect x="740" y="360" width="140" height="290" fill="#3150a1"/>
+  <rect x="930" y="280" width="160" height="370" fill="url(#neon)" opacity="0.66"/>
+  <path d="M60 755Q260 695 460 750T860 740T1170 760" stroke="#7ef7f2" stroke-width="8" fill="none" opacity="0.8"/>
+  <text x="70" y="840" fill="#eaf5ff" font-family="Inter,Arial" font-size="56" font-weight="700">Neon City — AI Art Style</text>
+</svg>
