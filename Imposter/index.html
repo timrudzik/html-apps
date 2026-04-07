@@ -529,6 +529,8 @@
       </div>
       <p><strong>Imposter waren:</strong></p>
       <ul id="imposter-list"></ul>
+      <p><strong>Reihenfolge fürs Namen-Sagen:</strong></p>
+      <ul id="speaking-order-list"></ul>
 
       <div class="buttons">
         <button id="new-round" class="primary">Neue Runde</button>
@@ -597,6 +599,7 @@
     const resultWord = document.getElementById('result-word');
     const resultCategory = document.getElementById('result-category');
     const imposterList = document.getElementById('imposter-list');
+    const speakingOrderList = document.getElementById('speaking-order-list');
 
     const startGameButton = document.getElementById('start-game');
     const newRoundButton = document.getElementById('new-round');
@@ -611,6 +614,8 @@
       specialPack: 'none',
       hintEnabled: false,
       adultContentEnabled: false,
+      revealOrder: [],
+      speakingOrder: [],
       revealIndex: 0,
       isRoleShown: false
     };
@@ -1063,7 +1068,8 @@
 
     function prepareRevealRole() {
       const index = state.revealIndex;
-      const isImposter = state.imposterIndices.includes(index);
+      const currentPlayerIndex = state.revealOrder[index];
+      const isImposter = state.imposterIndices.includes(currentPlayerIndex);
 
       if (isImposter) {
         roleMain.textContent = 'Du bist der Imposter';
@@ -1072,10 +1078,13 @@
       }
 
       if (state.hintEnabled) {
-        roleHint.classList.remove('hidden');
-        roleHint.textContent = isImposter
-          ? `Tipp: Die Kategorie ist „${state.category}“.`
-          : `Kategorie: ${state.category}`;
+        if (isImposter) {
+          roleHint.classList.remove('hidden');
+          roleHint.textContent = `Tipp: Die Kategorie ist „${state.category}“.`;
+        } else {
+          roleHint.textContent = '';
+          roleHint.classList.add('hidden');
+        }
       } else {
         roleHint.textContent = '';
         roleHint.classList.add('hidden');
@@ -1198,6 +1207,8 @@
       const { category, word } = selectedWord;
       const randomOrder = shuffledIndices(playerCount);
       const imposterIndices = randomOrder.slice(0, imposterCount);
+      const revealOrder = shuffledIndices(playerCount);
+      const speakingOrder = shuffledIndices(playerCount);
 
       state = {
         players,
@@ -1208,6 +1219,8 @@
         specialPack: selectedSpecialPack,
         hintEnabled: hintToggle.checked,
         adultContentEnabled,
+        revealOrder,
+        speakingOrder,
         revealIndex: 0,
         isRoleShown: false
       };
@@ -1220,9 +1233,10 @@
 
     function renderRevealScreen() {
       const index = state.revealIndex;
-      const player = state.players[index];
+      const playerIndex = state.revealOrder[index];
+      const player = state.players[playerIndex];
       revealPlayer.textContent = `${player.name} ist dran`;
-      revealProgress.textContent = `Spieler ${index + 1} von ${state.players.length}`;
+      revealProgress.textContent = `Karte ${index + 1} von ${state.players.length}`;
       updateAvatarImage(revealAvatar, player, 56);
 
       state.isRoleShown = false;
@@ -1255,6 +1269,7 @@
       resultCategory.textContent = state.category;
 
       imposterList.replaceChildren();
+      speakingOrderList.replaceChildren();
       state.imposterIndices
         .map((idx) => state.players[idx])
         .forEach((player) => {
@@ -1268,6 +1283,21 @@
           row.append(name);
           item.append(row);
           imposterList.append(item);
+        });
+
+      state.speakingOrder
+        .map((idx) => state.players[idx])
+        .forEach((player, orderIndex) => {
+          const item = document.createElement('li');
+          const row = document.createElement('div');
+          const name = document.createElement('span');
+
+          row.className = 'player-result';
+          row.append(createAvatarImage(player, true));
+          name.textContent = `${orderIndex + 1}. ${player.name}`;
+          row.append(name);
+          item.append(row);
+          speakingOrderList.append(item);
         });
     }
 
