@@ -598,7 +598,7 @@
     </section>
   </div>
 
-  <div id="result-confirm-modal" class="dialog-backdrop hidden" role="presentation">
+  <div id="result-confirm-modal" class="dialog-backdrop" hidden role="presentation">
     <div class="card dialog-card" role="dialog" aria-modal="true" aria-labelledby="result-confirm-title" aria-describedby="result-confirm-copy">
       <p class="screen-kicker">Bestätigung</p>
       <h2 id="result-confirm-title">Imposter wirklich preisgeben?</h2>
@@ -1370,13 +1370,13 @@
 
     function openResultConfirmModal() {
       lastModalTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      resultConfirmModal.classList.remove('hidden');
+      resultConfirmModal.hidden = false;
       document.body.classList.add('dialog-open');
       confirmResultAcceptButton.focus();
     }
 
     function closeResultConfirmModal({ restoreFocus = true } = {}) {
-      resultConfirmModal.classList.add('hidden');
+      resultConfirmModal.hidden = true;
       document.body.classList.remove('dialog-open');
       if (restoreFocus && lastModalTrigger && typeof lastModalTrigger.focus === 'function') {
         lastModalTrigger.focus();
@@ -1495,7 +1495,7 @@
       }
     });
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && !resultConfirmModal.classList.contains('hidden')) {
+      if (event.key === 'Escape' && !resultConfirmModal.hidden) {
         closeResultConfirmModal();
       }
     });
