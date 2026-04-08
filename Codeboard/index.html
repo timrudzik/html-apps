@@ -26,6 +26,7 @@
       --black: #262626;
       --gold: #b88a4d;
       --highlight: rgba(255, 255, 255, 0.44);
+      --word-offset: 12px;
     }
 
     * {
@@ -433,10 +434,12 @@
 
     .word-row.top .word-box {
       color: #314b35;
+      transform: translateX(calc(var(--word-offset) * -1));
     }
 
     .word-row.bottom .word-box {
       color: #7a3e36;
+      transform: translateX(calc(var(--word-offset) * -1));
     }
 
     .word-divider {
@@ -800,6 +803,10 @@
       .word-row {
         font-size: clamp(0.58rem, 2.6vw, 0.86rem);
         letter-spacing: 0.05em;
+      }
+
+      :root {
+        --word-offset: 8px;
       }
 
       .overlay-word {
