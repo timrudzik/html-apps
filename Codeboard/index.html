@@ -383,22 +383,21 @@
     .card-face {
       position: absolute;
       inset: 0;
-      padding: 12px 18px;
+      padding: 16px 18px;
       display: grid;
-      grid-template-rows: auto 1fr auto;
-      align-items: stretch;
+      grid-template-rows: 1fr auto 1fr;
+      align-items: center;
     }
 
     .word-row {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 100%;
       min-height: 0;
       font-size: clamp(0.92rem, 1.9vw, 1.64rem);
       line-height: 1;
-      font-weight: 900;
-      letter-spacing: 0.08em;
+      font-weight: 600;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
       text-align: center;
       text-wrap: balance;
@@ -406,47 +405,51 @@
     }
 
     .word-row.top {
-      align-self: start;
-      font-weight: 700;
+      transform: translateY(-6px);
     }
 
     .word-row.bottom {
-      align-self: end;
-      font-weight: 800;
-      transform: rotate(180deg);
+      transform: rotate(180deg) translateY(-6px);
     }
 
     .word-box {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: min(76%, 10.5rem);
-      min-height: 3.5rem;
-      padding: 10px 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(92, 61, 36, 0.16);
+      min-width: min(90%, 12.6rem);
+      min-height: 3.15rem;
+      padding: 10px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(110, 79, 50, 0.15);
       background:
-        linear-gradient(180deg, rgba(244, 230, 202, 0.68), rgba(216, 188, 145, 0.8)),
-        rgba(239, 222, 195, 0.7);
+        linear-gradient(180deg, rgba(250, 241, 226, 0.88), rgba(234, 214, 183, 0.92)),
+        rgba(247, 235, 214, 0.8);
       box-shadow:
-        inset 0 1px 0 rgba(255, 251, 243, 0.5),
-        inset 0 -10px 14px rgba(111, 72, 43, 0.09),
-        0 3px 8px rgba(70, 43, 24, 0.05);
+        inset 0 1px 0 rgba(255, 252, 245, 0.72),
+        inset 0 -10px 16px rgba(126, 92, 58, 0.08),
+        0 4px 10px rgba(70, 43, 24, 0.05);
       backdrop-filter: blur(2px);
     }
 
+    .word-row.top .word-box {
+      color: #314b35;
+    }
+
+    .word-row.bottom .word-box {
+      color: #7a3e36;
+    }
+
     .word-divider {
-      width: 68%;
+      width: 80%;
       height: 4px;
       border-radius: 999px;
       justify-self: center;
-      align-self: center;
       background:
-        linear-gradient(90deg, rgba(97, 67, 43, 0), rgba(97, 67, 43, 0.28), rgba(97, 67, 43, 0.42), rgba(97, 67, 43, 0.28), rgba(97, 67, 43, 0));
+        linear-gradient(90deg, rgba(121, 84, 53, 0), rgba(121, 84, 53, 0.44), rgba(121, 84, 53, 0.66), rgba(121, 84, 53, 0.44), rgba(121, 84, 53, 0));
       box-shadow:
-        0 1px 0 rgba(255, 246, 233, 0.28),
-        0 0 0 10px rgba(236, 219, 191, 0.12);
-      opacity: 0.82;
+        0 1px 0 rgba(255, 247, 233, 0.44),
+        0 0 0 10px rgba(233, 214, 183, 0.18);
+      opacity: 0.96;
     }
 
     .card.is-marked .card-face {
@@ -805,14 +808,14 @@
       }
 
       .word-box {
-        min-width: 82%;
+        min-width: 90%;
         min-height: 2.65rem;
         padding: 8px 8px;
         border-radius: 12px;
       }
 
       .word-divider {
-        width: 74%;
+        width: 82%;
       }
 
       .overlay-badge {
