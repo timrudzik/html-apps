@@ -1,0 +1,1312 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#b88a4d">
+  <title>Codeboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #e9dcc7;
+      --bg-deep: #d2bd98;
+      --paper: #f7f1e4;
+      --paper-strong: #fff9ef;
+      --ink: #241a12;
+      --muted: #6e5a47;
+      --line: rgba(64, 39, 20, 0.15);
+      --shadow: 0 22px 48px rgba(74, 46, 23, 0.16);
+      --shadow-soft: 0 12px 24px rgba(74, 46, 23, 0.1);
+      --red: #bf4c35;
+      --red-deep: #8c2f20;
+      --blue: #366997;
+      --blue-deep: #244762;
+      --neutral: #d4bf9b;
+      --neutral-deep: #a08865;
+      --black: #262626;
+      --gold: #b88a4d;
+      --highlight: rgba(255, 255, 255, 0.44);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 248, 232, 0.9), transparent 26%),
+        radial-gradient(circle at 85% 8%, rgba(123, 58, 30, 0.18), transparent 24%),
+        linear-gradient(180deg, #efe5d3 0%, var(--bg) 44%, var(--bg-deep) 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.3;
+      background-image:
+        linear-gradient(transparent 0, rgba(255, 255, 255, 0.12) 49%, transparent 51%),
+        linear-gradient(90deg, transparent 0, rgba(64, 39, 20, 0.02) 49%, transparent 51%);
+      background-size: 100% 22px, 22px 100%;
+    }
+
+    button {
+      font: inherit;
+      touch-action: manipulation;
+    }
+
+    .app-shell {
+      width: min(1460px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 20px 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 22px 24px;
+      border-radius: 28px;
+      border: 1px solid rgba(65, 37, 20, 0.15);
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.34), transparent 28%),
+        linear-gradient(140deg, rgba(54, 32, 20, 0.95), rgba(123, 77, 42, 0.92));
+      color: #fff7ea;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -36px;
+      bottom: -40px;
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 0.76rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: rgba(255, 242, 221, 0.72);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.25rem, 5vw, 3.9rem);
+      line-height: 0.92;
+      letter-spacing: -0.05em;
+      max-width: 10ch;
+    }
+
+    .intro {
+      max-width: 70ch;
+      margin: 10px 0 0;
+      color: rgba(255, 245, 232, 0.82);
+      line-height: 1.55;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+      justify-content: flex-end;
+    }
+
+    .hero button,
+    .control-panel button {
+      border: 1px solid rgba(82, 53, 33, 0.15);
+      border-radius: 16px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+
+    .hero button:hover,
+    .control-panel button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(46, 31, 20, 0.12);
+    }
+
+    .hero button:disabled,
+    .control-panel button:disabled {
+      opacity: 0.48;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .hero button.primary {
+      background: linear-gradient(135deg, #e3b26a, #c7873f);
+      color: #2f1d10;
+      font-weight: 800;
+      border-color: rgba(97, 59, 27, 0.2);
+    }
+
+    .hero button.secondary {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff7ea;
+      font-weight: 700;
+      border-color: rgba(255, 246, 231, 0.18);
+      backdrop-filter: blur(8px);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.8fr);
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+
+    .board-panel,
+    .control-panel {
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background: rgba(255, 249, 240, 0.78);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(10px);
+    }
+
+    .board-panel {
+      padding: 18px;
+    }
+
+    .board-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .stat-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(82, 53, 33, 0.12);
+      background: rgba(255, 255, 255, 0.56);
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64);
+    }
+
+    .pill-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.72);
+      flex-shrink: 0;
+    }
+
+    .pill-dot.red {
+      background: var(--red);
+    }
+
+    .pill-dot.blue {
+      background: var(--blue);
+    }
+
+    .pill-dot.neutral {
+      background: var(--neutral-deep);
+    }
+
+    .pill-dot.black {
+      background: var(--black);
+    }
+
+    .status-line {
+      font-size: 0.96rem;
+      color: var(--muted);
+      min-height: 1.2em;
+      text-align: right;
+    }
+
+    .lock-banner {
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(38, 38, 38, 0.92);
+      color: #f8f1e4;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-align: center;
+      display: none;
+    }
+
+    .lock-banner.show {
+      display: block;
+    }
+
+    .board-wrap {
+      padding: 14px;
+      border-radius: 24px;
+      border: 1px solid rgba(82, 53, 33, 0.12);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(229, 213, 190, 0.5)),
+        rgba(236, 224, 208, 0.85);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .board.locked .card {
+      cursor: not-allowed;
+    }
+
+    .card {
+      position: relative;
+      aspect-ratio: 1 / 0.74;
+      border: 0;
+      border-radius: 20px;
+      padding: 0;
+      overflow: hidden;
+      cursor: pointer;
+      text-align: left;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.86), transparent 36%),
+        linear-gradient(180deg, var(--paper-strong), var(--paper));
+      box-shadow:
+        inset 0 0 0 1px rgba(82, 53, 33, 0.12),
+        inset 0 -10px 24px rgba(122, 89, 53, 0.05),
+        0 14px 18px rgba(82, 53, 33, 0.08);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(82, 53, 33, 0.08);
+      pointer-events: none;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 20%),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 28%, transparent 72%, rgba(82, 53, 33, 0.04));
+      mix-blend-mode: soft-light;
+    }
+
+    .card:hover {
+      transform: translateY(-1px);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .word-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42%;
+      font-size: clamp(0.84rem, 1.7vw, 1.5rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+      text-wrap: balance;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.64);
+    }
+
+    .word-row.bottom {
+      transform: rotate(180deg);
+    }
+
+    .card.is-marked .card-face {
+      color: rgba(255, 255, 255, 0.94);
+      text-shadow: none;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px 18px;
+      color: #fff8ef;
+    }
+
+    .overlay::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .overlay.red {
+      background: linear-gradient(180deg, rgba(208, 95, 68, 0.98), rgba(140, 47, 32, 0.98));
+    }
+
+    .overlay.blue {
+      background: linear-gradient(180deg, rgba(75, 126, 170, 0.98), rgba(36, 71, 98, 0.98));
+    }
+
+    .overlay.neutral {
+      color: #3a2a1b;
+      background: linear-gradient(180deg, rgba(229, 213, 190, 0.98), rgba(172, 146, 110, 0.98));
+    }
+
+    .overlay.black {
+      background: linear-gradient(180deg, rgba(53, 53, 53, 0.98), rgba(14, 14, 14, 0.98));
+    }
+
+    .overlay-word {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42%;
+      font-size: clamp(0.74rem, 1.35vw, 1.1rem);
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .overlay-word.bottom {
+      transform: rotate(180deg);
+    }
+
+    .overlay-badge {
+      position: relative;
+      z-index: 1;
+      align-self: center;
+      min-width: 64px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      text-align: center;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      background: rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .overlay.neutral .overlay-badge {
+      background: rgba(55, 34, 17, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(55, 34, 17, 0.16);
+    }
+
+    .control-panel {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel-block {
+      padding: 16px;
+      border-radius: 22px;
+      border: 1px solid rgba(82, 53, 33, 0.1);
+      background: rgba(255, 253, 247, 0.76);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    }
+
+    .panel-block h2 {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .panel-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.94rem;
+    }
+
+    .segment,
+    .marker-grid,
+    .action-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .segment {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .marker-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .action-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .segment button,
+    .marker-grid button,
+    .action-grid button {
+      min-height: 56px;
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--ink);
+      font-weight: 800;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .segment button.is-active,
+    .marker-grid button.is-active {
+      border-color: rgba(61, 35, 18, 0.22);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.84),
+        0 12px 22px rgba(46, 31, 20, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .segment button.red.is-active,
+    .marker-grid button.red.is-active {
+      background: linear-gradient(140deg, rgba(232, 165, 146, 0.92), rgba(191, 76, 53, 0.92));
+      color: #33150f;
+    }
+
+    .segment button.blue.is-active,
+    .marker-grid button.blue.is-active {
+      background: linear-gradient(140deg, rgba(164, 203, 235, 0.92), rgba(54, 105, 151, 0.92));
+      color: #0f2230;
+    }
+
+    .marker-grid button.neutral.is-active {
+      background: linear-gradient(140deg, rgba(248, 236, 215, 0.92), rgba(207, 177, 133, 0.94));
+      color: #35261a;
+    }
+
+    .marker-grid button.black.is-active {
+      background: linear-gradient(140deg, rgba(90, 90, 90, 0.92), rgba(29, 29, 29, 0.98));
+      color: #f7ede2;
+    }
+
+    .marker-grid button.erase.is-active {
+      background: linear-gradient(140deg, rgba(250, 241, 228, 0.92), rgba(215, 198, 172, 0.98));
+      color: #3d2e21;
+    }
+
+    .button-line {
+      display: block;
+      font-size: 0.77rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(42, 28, 18, 0.6);
+    }
+
+    .button-title {
+      display: block;
+      margin-top: 4px;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .meta-card {
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(82, 53, 33, 0.08);
+      background: rgba(255, 255, 255, 0.68);
+    }
+
+    .meta-label {
+      display: block;
+      font-size: 0.76rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .meta-value {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .note-list {
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .note-list li + li {
+      margin-top: 8px;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1080px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .control-panel {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app-shell {
+        width: min(100%, calc(100% - 14px));
+        padding-top: 10px;
+      }
+
+      .hero {
+        padding: 18px;
+        border-radius: 24px;
+      }
+
+      .hero-actions,
+      .board-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .status-line {
+        text-align: left;
+      }
+
+      .board {
+        gap: 8px;
+      }
+
+      .board-wrap {
+        padding: 10px;
+      }
+
+      .card {
+        border-radius: 16px;
+      }
+
+      .card-face,
+      .overlay {
+        padding: 12px;
+      }
+
+      .word-row {
+        font-size: clamp(0.58rem, 2.6vw, 0.86rem);
+        letter-spacing: 0.05em;
+      }
+
+      .overlay-word {
+        font-size: clamp(0.52rem, 2vw, 0.78rem);
+        letter-spacing: 0.09em;
+      }
+
+      .overlay-badge {
+        min-width: 46px;
+        padding: 8px 10px;
+        font-size: 0.82rem;
+      }
+
+      .segment,
+      .marker-grid,
+      .action-grid,
+      .meta-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Tabletop Companion</p>
+        <h1>Codeboard</h1>
+        <p class="intro">
+          Digitales 5x5-Wortfeld fuer Codenames-Runden. Die Original-Schluesselkarte bleibt auf dem Tisch,
+          das Tablet zeigt nur die Kartenmitte und die aufgedeckten Marker.
+        </p>
+      </div>
+      <div class="hero-actions">
+        <button id="newRoundBtn" class="primary" type="button">Neue Runde</button>
+        <button id="fullscreenBtn" class="secondary" type="button">Vollbild</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="board-panel">
+        <div class="board-toolbar">
+          <div class="stat-strip" id="statStrip" aria-live="polite"></div>
+          <div class="status-line" id="statusLine"></div>
+        </div>
+        <div id="lockBanner" class="lock-banner" aria-live="polite">Spielfeld gesperrt. Zum Entsperren den Knopf rechts nutzen.</div>
+        <div class="board-wrap">
+          <div id="board" class="board" role="grid" aria-label="Codenames Wortfeld"></div>
+        </div>
+      </section>
+
+      <aside class="control-panel">
+        <section class="panel-block">
+          <h2>Runde</h2>
+          <p class="panel-copy">
+            Stell das Startteam passend zur Original-Schluesselkarte ein. Das Startteam hat 9 Agenten,
+            das andere Team 8.
+          </p>
+          <div class="segment" aria-label="Startteam">
+            <button id="startRedBtn" class="red" type="button">
+              <span class="button-line">Startteam</span>
+              <span class="button-title">Rot startet</span>
+            </button>
+            <button id="startBlueBtn" class="blue" type="button">
+              <span class="button-line">Startteam</span>
+              <span class="button-title">Blau startet</span>
+            </button>
+          </div>
+          <div class="meta-grid">
+            <div class="meta-card">
+              <span class="meta-label">Aktiver Marker</span>
+              <span class="meta-value" id="activeMarkerValue">Rot</span>
+            </div>
+            <div class="meta-card">
+              <span class="meta-label">Undo Schritte</span>
+              <span class="meta-value" id="undoCountValue">0</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-block">
+          <h2>Marker</h2>
+          <p class="panel-copy">
+            Marker auswaehlen und danach auf ein Wort tippen. Derselbe Marker auf derselben Karte entfernt
+            die Abdeckung wieder.
+          </p>
+          <div id="markerGrid" class="marker-grid" aria-label="Marker Auswahl"></div>
+        </section>
+
+        <section class="panel-block">
+          <h2>Aktionen</h2>
+          <div class="action-grid">
+            <button id="undoBtn" type="button">Undo</button>
+            <button id="clearBtn" type="button">Alle Marker loeschen</button>
+            <button id="lockBtn" type="button">Feld sperren</button>
+            <button id="wakeBtn" type="button">Bildschirm wachhalten</button>
+          </div>
+          <p class="footer-note" id="deviceLine"></p>
+        </section>
+
+        <section class="panel-block">
+          <h2>Am Tisch</h2>
+          <ul class="note-list">
+            <li>Die Worte sind absichtlich von beiden Seiten lesbar: oben normal, unten gedreht.</li>
+            <li>Der Zustand bleibt lokal auf diesem Geraet gespeichert, falls die Seite neu geladen wird.</li>
+            <li>Neue Runde tauscht alle 25 Begriffe gegen neue aus und setzt Marker zurueck.</li>
+            <li>Eigene Wortliste, damit die App stilistisch passt, aber nicht die offizielle Kartenliste kopiert.</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "codeboard-state-v1";
+    const HISTORY_LIMIT = 60;
+
+    const MARKERS = {
+      red: {
+        name: "Rot",
+        short: "ROT",
+        boardLabel: "ROTE AGENTEN",
+        overlayClass: "red"
+      },
+      blue: {
+        name: "Blau",
+        short: "BLAU",
+        boardLabel: "BLAUE AGENTEN",
+        overlayClass: "blue"
+      },
+      neutral: {
+        name: "Neutral",
+        short: "NEUTRAL",
+        boardLabel: "NEUTRAL",
+        overlayClass: "neutral"
+      },
+      black: {
+        name: "Schwarzer Peter",
+        short: "SP",
+        boardLabel: "SCHWARZER PETER",
+        overlayClass: "black"
+      },
+      erase: {
+        name: "Radierer",
+        short: "RADIEREN"
+      }
+    };
+
+    const WORD_POOL = [
+      "anker", "apfel", "arena", "armband", "atlas", "auto", "bahn", "balkon", "ball", "bambus",
+      "bank", "baron", "batterie", "becher", "beet", "berg", "bett", "biber", "bild", "birke",
+      "blatt", "blitz", "blume", "bombe", "bohne", "boot", "brille", "bronze", "brunnen", "buch",
+      "burg", "bus", "butter", "campus", "chor", "clown", "computer", "dach", "daten", "delta",
+      "diamant", "dock", "donner", "dorf", "drache", "draht", "duene", "echo", "eis", "elefant",
+      "engel", "erde", "fackel", "faden", "fahne", "falter", "fenster", "ferse", "feuer", "fibel",
+      "fisch", "flasche", "flieger", "fluss", "foehn", "fuchs", "funke", "gabel", "galaxie", "garten",
+      "gas", "gitter", "glas", "gleis", "gold", "granit", "grenze", "griff", "grotte", "gurt",
+      "hafen", "hammer", "hand", "harfe", "hebel", "hemd", "herz", "himmel", "hirsch", "honig",
+      "horizont", "hotel", "huette", "igel", "insel", "jacke", "joker", "junge", "kabel", "kaktus",
+      "kamera", "kanal", "kanone", "karte", "kessel", "kette", "kissen", "klang", "klebeband", "klinge",
+      "knoten", "koenig", "koffer", "komet", "korken", "kragen", "kralle", "krone", "kugel", "kueste",
+      "kultur", "lampe", "laser", "lawine", "leder", "leiter", "limette", "linie", "lotus", "lupe",
+      "magnet", "maus", "meer", "mehl", "melodie", "messer", "meteor", "mikrofon", "milch", "mine",
+      "mond", "motor", "muehle", "muster", "nadel", "nebel", "netz", "niete", "nord", "note",
+      "oase", "oel", "ofen", "opal", "orange", "orgel", "paket", "palme", "panther", "papier",
+      "park", "perle", "pfad", "pfeil", "pflaster", "pforte", "pilot", "pirat", "pixel", "planet",
+      "platte", "poesie", "polster", "portal", "prisma", "propeller", "puls", "quelle", "quarz", "radar",
+      "rahmen", "rakete", "rampe", "regen", "reifen", "ring", "robbe", "rohr", "rose", "rubin",
+      "rucksack", "ruine", "saal", "safari", "saite", "salz", "saturn", "schacht", "schalter", "schatten",
+      "schere", "schirm", "schluessel", "schnee", "schraube", "schwan", "segel", "seide", "seil", "signal",
+      "silber", "sirene", "sofa", "sommer", "sonne", "spiegel", "spur", "stadt", "stahl", "steg",
+      "stern", "stiefel", "stift", "stille", "sturm", "tafel", "takt", "tanne", "tasche", "taucher",
+      "teppich", "tiger", "tinte", "tisch", "tonne", "turm", "ufer", "uhr", "ulme", "vase",
+      "vektor", "ventil", "vulkan", "waage", "wald", "walzer", "wasser", "wecker", "welle", "werkzeug",
+      "weste", "wind", "wolke", "wuerfel", "wunder", "zange", "zaun", "zebra", "zeit", "zelt",
+      "ziegel", "zirkel", "zitrone", "zoll", "zucker", "zwerg"
+    ];
+
+    const state = loadState();
+    let wakeLockSentinel = null;
+    let uiNotice = "";
+    let noticeTimeout = null;
+
+    const board = document.getElementById("board");
+    const statStrip = document.getElementById("statStrip");
+    const statusLine = document.getElementById("statusLine");
+    const lockBanner = document.getElementById("lockBanner");
+    const markerGrid = document.getElementById("markerGrid");
+    const activeMarkerValue = document.getElementById("activeMarkerValue");
+    const undoCountValue = document.getElementById("undoCountValue");
+    const deviceLine = document.getElementById("deviceLine");
+    const startRedBtn = document.getElementById("startRedBtn");
+    const startBlueBtn = document.getElementById("startBlueBtn");
+    const newRoundBtn = document.getElementById("newRoundBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const undoBtn = document.getElementById("undoBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const lockBtn = document.getElementById("lockBtn");
+    const wakeBtn = document.getElementById("wakeBtn");
+
+    renderMarkerButtons();
+    attachEvents();
+    render();
+
+    if (state.keepAwake) {
+      requestWakeLock();
+    }
+
+    function attachEvents() {
+      board.addEventListener("click", (event) => {
+        const card = event.target.closest(".card");
+        if (!card) {
+          return;
+        }
+
+        if (state.locked) {
+          flashNotice("Spielfeld ist gesperrt.");
+          return;
+        }
+
+        const index = Number(card.dataset.index);
+        const nextMarker = state.activeMarker === "erase" ? null : state.activeMarker;
+        const currentMarker = state.marks[index];
+
+        if (nextMarker === null && currentMarker === null) {
+          return;
+        }
+
+        commit(() => {
+          state.marks[index] = currentMarker === nextMarker ? null : nextMarker;
+        });
+      });
+
+      markerGrid.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-marker]");
+        if (!button) {
+          return;
+        }
+
+        state.activeMarker = button.dataset.marker;
+        saveState();
+        render();
+      });
+
+      startRedBtn.addEventListener("click", () => setStartTeam("red"));
+      startBlueBtn.addEventListener("click", () => setStartTeam("blue"));
+
+      newRoundBtn.addEventListener("click", () => {
+        const hasProgress = state.marks.some(Boolean);
+        const ok = !hasProgress || window.confirm("Neue Runde starten? Worte und Marker werden zurueckgesetzt.");
+        if (!ok) {
+          return;
+        }
+
+        commit(() => {
+          state.words = drawWords(state.words);
+          state.marks = Array(25).fill(null);
+          state.locked = false;
+        });
+        flashNotice("25 neue Worte geladen.");
+      });
+
+      fullscreenBtn.addEventListener("click", toggleFullscreen);
+      undoBtn.addEventListener("click", undo);
+
+      clearBtn.addEventListener("click", () => {
+        if (!state.marks.some(Boolean)) {
+          flashNotice("Es gibt noch keine Marker zum Entfernen.");
+          return;
+        }
+
+        commit(() => {
+          state.marks = Array(25).fill(null);
+        });
+        flashNotice("Alle Marker wurden entfernt.");
+      });
+
+      lockBtn.addEventListener("click", () => {
+        commit(() => {
+          state.locked = !state.locked;
+        });
+        flashNotice(state.locked ? "Spielfeld gesperrt." : "Spielfeld entsperrt.");
+      });
+
+      wakeBtn.addEventListener("click", async () => {
+        if (state.keepAwake) {
+          await releaseWakeLock();
+          flashNotice("Bildschirm darf wieder einschlafen.");
+          return;
+        }
+
+        await requestWakeLock();
+      });
+
+      document.addEventListener("visibilitychange", async () => {
+        if (document.visibilityState === "visible" && state.keepAwake && !wakeLockSentinel) {
+          await requestWakeLock(true);
+        }
+      });
+
+      document.addEventListener("fullscreenchange", render);
+    }
+
+    function render() {
+      board.classList.toggle("locked", state.locked);
+      lockBanner.classList.toggle("show", state.locked);
+      board.innerHTML = state.words.map((word, index) => cardMarkup(word, state.marks[index], index)).join("");
+      statStrip.innerHTML = statMarkup();
+      statusLine.textContent = uiNotice || defaultStatusText();
+      activeMarkerValue.textContent = MARKERS[state.activeMarker].name;
+      undoCountValue.textContent = String(state.history.length);
+      startRedBtn.classList.toggle("is-active", state.startTeam === "red");
+      startBlueBtn.classList.toggle("is-active", state.startTeam === "blue");
+      lockBtn.textContent = state.locked ? "Feld entsperren" : "Feld sperren";
+      wakeBtn.textContent = state.keepAwake ? "Wachhalten aus" : "Bildschirm wachhalten";
+      fullscreenBtn.textContent = document.fullscreenElement ? "Vollbild beenden" : "Vollbild";
+      undoBtn.disabled = state.history.length === 0;
+      deviceLine.textContent = wakeLockLine();
+      syncMarkerButtonState();
+    }
+
+    function renderMarkerButtons() {
+      markerGrid.innerHTML = Object.entries(MARKERS).map(([key, marker]) => `
+        <button type="button" class="${key}" data-marker="${key}">
+          <span class="button-line">Marker</span>
+          <span class="button-title">${escapeHtml(marker.name)}</span>
+        </button>
+      `).join("");
+    }
+
+    function syncMarkerButtonState() {
+      markerGrid.querySelectorAll("button[data-marker]").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.marker === state.activeMarker);
+      });
+    }
+
+    function statMarkup() {
+      const targets = state.startTeam === "red"
+        ? { red: 9, blue: 8 }
+        : { red: 8, blue: 9 };
+      const counts = markerCounts();
+
+      return [
+        pillMarkup("red", `Rot offen ${Math.max(targets.red - counts.red, 0)}`),
+        pillMarkup("blue", `Blau offen ${Math.max(targets.blue - counts.blue, 0)}`),
+        pillMarkup("neutral", `Neutral ${counts.neutral}`),
+        pillMarkup("black", counts.black ? "Peter gefunden" : "Peter offen")
+      ].join("");
+    }
+
+    function pillMarkup(color, text) {
+      return `
+        <div class="pill">
+          <span class="pill-dot ${color}" aria-hidden="true"></span>
+          <span>${escapeHtml(text)}</span>
+        </div>
+      `;
+    }
+
+    function cardMarkup(word, marker, index) {
+      const markerInfo = marker ? MARKERS[marker] : null;
+      const displayWord = word.toLocaleUpperCase("de-DE");
+      const ariaParts = [`Karte ${index + 1}: ${displayWord}`];
+
+      if (markerInfo) {
+        ariaParts.push(`markiert mit ${markerInfo.name}`);
+      }
+
+      return `
+        <button
+          class="card${markerInfo ? " is-marked" : ""}"
+          type="button"
+          data-index="${index}"
+          aria-label="${escapeHtml(ariaParts.join(", "))}">
+          <div class="card-face">
+            <div class="word-row top">${escapeHtml(displayWord)}</div>
+            <div class="word-row bottom">${escapeHtml(displayWord)}</div>
+          </div>
+          ${markerInfo ? overlayMarkup(markerInfo) : ""}
+        </button>
+      `;
+    }
+
+    function overlayMarkup(markerInfo) {
+      return `
+        <div class="overlay ${markerInfo.overlayClass}">
+          <div class="overlay-word top">${escapeHtml(markerInfo.boardLabel)}</div>
+          <div class="overlay-badge">${escapeHtml(markerInfo.short)}</div>
+          <div class="overlay-word bottom">${escapeHtml(markerInfo.boardLabel)}</div>
+        </div>
+      `;
+    }
+
+    function markerCounts() {
+      return state.marks.reduce((counts, marker) => {
+        if (marker && counts[marker] !== undefined) {
+          counts[marker] += 1;
+        }
+        return counts;
+      }, { red: 0, blue: 0, neutral: 0, black: 0 });
+    }
+
+    function setStartTeam(team) {
+      if (state.startTeam === team) {
+        return;
+      }
+
+      commit(() => {
+        state.startTeam = team;
+      });
+    }
+
+    function undo() {
+      if (state.history.length === 0) {
+        flashNotice("Kein Undo mehr verfuegbar.");
+        return;
+      }
+
+      const previous = state.history.pop();
+      state.words = [...previous.words];
+      state.marks = [...previous.marks];
+      state.activeMarker = previous.activeMarker;
+      state.startTeam = previous.startTeam;
+      state.locked = previous.locked;
+      state.keepAwake = previous.keepAwake;
+      saveState();
+      render();
+      syncWakeLockState();
+      flashNotice("Letzten Schritt rueckgaengig gemacht.");
+    }
+
+    function commit(mutator) {
+      state.history.push(snapshot());
+      if (state.history.length > HISTORY_LIMIT) {
+        state.history.shift();
+      }
+
+      mutator();
+      saveState();
+      render();
+      syncWakeLockState();
+    }
+
+    function snapshot() {
+      return {
+        words: [...state.words],
+        marks: [...state.marks],
+        activeMarker: state.activeMarker,
+        startTeam: state.startTeam,
+        locked: state.locked,
+        keepAwake: state.keepAwake
+      };
+    }
+
+    function loadState() {
+      const fallback = createDefaultState();
+
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return fallback;
+        }
+
+        const parsed = JSON.parse(raw);
+        if (!isValidSavedState(parsed)) {
+          return fallback;
+        }
+
+        return {
+          words: [...parsed.words],
+          marks: [...parsed.marks],
+          activeMarker: parsed.activeMarker,
+          startTeam: parsed.startTeam,
+          locked: parsed.locked,
+          keepAwake: Boolean(parsed.keepAwake),
+          history: Array.isArray(parsed.history)
+            ? parsed.history.filter(isValidSnapshot).slice(-HISTORY_LIMIT)
+            : []
+        };
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function createDefaultState() {
+      return {
+        words: drawWords(),
+        marks: Array(25).fill(null),
+        activeMarker: "red",
+        startTeam: "red",
+        locked: false,
+        keepAwake: false,
+        history: []
+      };
+    }
+
+    function isValidSavedState(value) {
+      return Boolean(
+        value &&
+        Array.isArray(value.words) &&
+        value.words.length === 25 &&
+        Array.isArray(value.marks) &&
+        value.marks.length === 25 &&
+        Object.prototype.hasOwnProperty.call(MARKERS, value.activeMarker) &&
+        (value.startTeam === "red" || value.startTeam === "blue") &&
+        typeof value.locked === "boolean" &&
+        value.words.every((word) => typeof word === "string" && word.length > 0) &&
+        value.marks.every((marker) => marker === null || ["red", "blue", "neutral", "black"].includes(marker))
+      );
+    }
+
+    function isValidSnapshot(value) {
+      return isValidSavedState({
+        ...value,
+        history: []
+      });
+    }
+
+    function saveState() {
+      const payload = {
+        words: state.words,
+        marks: state.marks,
+        activeMarker: state.activeMarker,
+        startTeam: state.startTeam,
+        locked: state.locked,
+        keepAwake: state.keepAwake,
+        history: state.history
+      };
+
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (error) {
+        // Falls Storage blockiert ist, laeuft die Runde trotzdem weiter.
+      }
+    }
+
+    function drawWords(previousWords = []) {
+      const excluded = new Set(previousWords);
+      const available = WORD_POOL.filter((word) => !excluded.has(word));
+      const source = available.length >= 25 ? available : WORD_POOL;
+      const pool = [...source];
+
+      for (let index = pool.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        const temp = pool[index];
+        pool[index] = pool[swapIndex];
+        pool[swapIndex] = temp;
+      }
+
+      return pool.slice(0, 25);
+    }
+
+    function defaultStatusText() {
+      const action = state.activeMarker === "erase"
+        ? "Tippe auf ein Wort, um den Marker zu entfernen."
+        : `Aktiver Marker: ${MARKERS[state.activeMarker].name}.`;
+
+      const safety = state.locked ? " Spielfeld ist gesperrt." : "";
+      return action + safety;
+    }
+
+    function flashNotice(message) {
+      uiNotice = message;
+      render();
+      window.clearTimeout(noticeTimeout);
+      noticeTimeout = window.setTimeout(() => {
+        uiNotice = "";
+        render();
+      }, 1800);
+    }
+
+    async function toggleFullscreen() {
+      try {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+          return;
+        }
+
+        await document.documentElement.requestFullscreen();
+      } catch (error) {
+        flashNotice("Vollbild wird auf diesem Geraet nicht unterstuetzt.");
+      }
+    }
+
+    async function requestWakeLock(silent = false) {
+      if (!("wakeLock" in navigator)) {
+        state.keepAwake = false;
+        saveState();
+        render();
+        if (!silent) {
+          flashNotice("Wake Lock wird hier leider nicht unterstuetzt.");
+        }
+        return;
+      }
+
+      try {
+        wakeLockSentinel = await navigator.wakeLock.request("screen");
+        wakeLockSentinel.addEventListener("release", () => {
+          wakeLockSentinel = null;
+          render();
+        });
+        state.keepAwake = true;
+        saveState();
+        render();
+        if (!silent) {
+          flashNotice("Bildschirm bleibt wach.");
+        }
+      } catch (error) {
+        state.keepAwake = false;
+        saveState();
+        render();
+        if (!silent) {
+          flashNotice("Wake Lock konnte nicht aktiviert werden.");
+        }
+      }
+    }
+
+    async function releaseWakeLock() {
+      state.keepAwake = false;
+
+      try {
+        if (wakeLockSentinel) {
+          await wakeLockSentinel.release();
+        }
+      } catch (error) {
+        // Ignoriert, der Zustand wird trotzdem aktualisiert.
+      }
+
+      wakeLockSentinel = null;
+      saveState();
+      render();
+    }
+
+    function syncWakeLockState() {
+      if (state.keepAwake && !wakeLockSentinel) {
+        requestWakeLock(true);
+      }
+
+      if (!state.keepAwake && wakeLockSentinel) {
+        releaseWakeLock();
+      }
+    }
+
+    function wakeLockLine() {
+      if (!("wakeLock" in navigator)) {
+        return "Bildschirm wachhalten wird von diesem Browser vermutlich nicht angeboten.";
+      }
+
+      return state.keepAwake
+        ? "Bildschirm bleibt aktiv, solange der Browser den Wake Lock haelt."
+        : "Wake Lock ist aus. Praktisch, wenn das Tablet waehrend der Runde offen liegen soll.";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+  </script>
+</body>
+</html>
