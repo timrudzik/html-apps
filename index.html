@@ -154,6 +154,25 @@
       color: var(--muted);
     }
 
+    .page-stamp {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      min-height: 40px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(23, 26, 31, 0.08);
+      background: rgba(255, 255, 253, 0.84);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(43, 35, 30, 0.1);
+      color: var(--muted);
+      font-size: 0.82rem;
+      letter-spacing: 0.01em;
+    }
+
     @media (max-width: 640px) {
       .page {
         width: min(960px, calc(100% - 20px));
@@ -163,6 +182,15 @@
       .app-card {
         padding: 18px;
         border-radius: 20px;
+      }
+
+      .page-stamp {
+        right: 10px;
+        bottom: 10px;
+        max-width: calc(100vw - 20px);
+        min-height: 36px;
+        padding: 8px 11px;
+        font-size: 0.76rem;
       }
     }
 
@@ -181,6 +209,7 @@
   <main class="page">
     <div id="appGrid" class="app-grid" aria-label="Programme"></div>
   </main>
+  <div id="pageStamp" class="page-stamp" aria-live="polite"></div>
 
   <script>
     // Neue Apps hier ergaenzen.
@@ -212,6 +241,7 @@
     ];
 
     const appGrid = document.getElementById("appGrid");
+    const pageStamp = document.getElementById("pageStamp");
     appGrid.innerHTML = apps.map((app) => `
       <article class="app-card" style="--accent: ${app.accent};">
         <div>
@@ -235,6 +265,15 @@
         </div>
       </article>
     `).join("");
+
+    const modifiedDate = new Date(document.lastModified);
+    const hasValidDate = !Number.isNaN(modifiedDate.getTime());
+    pageStamp.textContent = hasValidDate
+      ? `Zuletzt geaendert: ${new Intl.DateTimeFormat("de-DE", {
+          dateStyle: "medium",
+          timeStyle: "short"
+        }).format(modifiedDate)}`
+      : "Zuletzt geaendert: unbekannt";
   </script>
 </body>
 </html>
