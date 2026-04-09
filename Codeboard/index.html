@@ -666,6 +666,16 @@
       color: #fff8ef;
     }
 
+    .overlay.fill {
+      padding: 0;
+    }
+
+    .overlay.centered {
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
     .overlay::before {
       content: "";
       position: absolute;
@@ -726,6 +736,23 @@
     .overlay.neutral .overlay-badge {
       background: rgba(55, 34, 17, 0.12);
       box-shadow: inset 0 0 0 1px rgba(55, 34, 17, 0.16);
+    }
+
+    .overlay.centered .overlay-badge {
+      min-width: min(78%, 12rem);
+      padding: 14px 18px;
+      font-size: clamp(0.92rem, 1.6vw, 1.16rem);
+    }
+
+    .keep-awake-video {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      pointer-events: none;
+      z-index: -1;
     }
 
     .control-panel {
@@ -1266,11 +1293,44 @@
       "teppich", "tiger", "tinte", "tisch", "tonne", "turm", "ufer", "uhr", "ulme", "vase",
       "vektor", "ventil", "vulkan", "waage", "wald", "walzer", "wasser", "wecker", "welle", "werkzeug",
       "weste", "wind", "wolke", "wuerfel", "wunder", "zange", "zaun", "zebra", "zeit", "zelt",
-      "ziegel", "zirkel", "zitrone", "zoll", "zucker", "zwerg"
+      "ziegel", "zirkel", "zitrone", "zoll", "zucker", "zwerg", "abgrund", "abzeichen", "ahorn", "akkord",
+      "ampel", "amulett", "antilope", "archiv", "asteroid", "auktion", "backstein", "badewanne", "barren", "beifall",
+      "beutel", "bibliothek", "bison", "boje", "bonsai", "bordstein", "brosche", "buchse", "buehne", "buendel",
+      "buerste", "burggraben", "charme", "chronik", "cockpit", "coupon", "dattel", "deckel", "degen", "denkmal",
+      "diele", "diskus", "dom", "dose", "draisine", "drossel", "duft", "ebene", "edelstein", "eimer",
+      "elfe", "empore", "enzian", "fahrrad", "falte", "fanfare", "farbe", "faust", "feder", "feile",
+      "fels", "fenchel", "festung", "filter", "firnis", "flagge", "floete", "foyer", "frack", "fresko",
+      "frost", "gans", "gardine", "gehaeuse", "geiser", "gepard", "geruest", "gewitter", "glut", "gong",
+      "gorilla", "graefin", "grashalm", "grube", "haube", "hecke", "heft", "heizung", "helm", "hering",
+      "hobel", "hoehe", "horn", "hubschrauber", "hufeisen", "hummel", "idol", "impuls", "indigo", "inferno",
+      "insekt", "jacht", "jalousie", "jaspis", "jeton", "juwel", "kabine", "kakao", "kalender", "kamin",
+      "kanu", "kapelle", "karawane", "karton", "karussell", "kaskade", "kasten", "katapult", "kiesel", "kimono",
+      "kirche", "kirsche", "klampe", "klaue", "klecks", "klippe", "kloster", "knarre", "kohle", "kompass",
+      "konfetti", "konsole", "kontur", "koralle", "kordel", "kosmos", "kristall", "kuebel", "kuehler", "kuerbis",
+      "kufe", "labor", "lack", "lagune", "laterne", "laute", "lavendel", "lehm", "libelle", "lichtung",
+      "lilie", "limo", "linsen", "lorbeer", "lounge", "mango", "mantel", "marmor", "mast", "matrose",
+      "mauer", "medaille", "meise", "meridian", "minute", "moehre", "moos", "mulde", "nachbar", "nachtigall",
+      "narbe", "nelke", "nische", "nomade", "nudel", "oberflaeche", "obsidian", "oktan", "oliven", "orkan",
+      "orchidee", "orden", "paddel", "palast", "panorama", "parfum", "pass", "pegel", "pelikan", "pendel",
+      "pergament", "pflaume", "phantom", "phoenix", "picknick", "planke", "platin", "pokal", "pomade", "porzellan",
+      "posaune", "praerie", "protokoll", "quaste", "quittung", "radieschen", "ranzen", "raupe", "regal", "resonanz",
+      "riff", "ritter", "rutsche", "rummel", "sanduhr", "saphir", "sarg", "schaufel", "scheibe", "schelle",
+      "schiefer", "schirmmuetze", "schlauch", "schleuse", "schlucht", "schmiede", "schnabel", "schnur", "scholle", "schrein",
+      "schubkarre", "schuppe", "schuerze", "seepferd", "sockel", "socke", "solarium", "spange", "speer", "sprosse",
+      "staude", "staub", "steppe", "stollen", "storch", "streifen", "strudel", "stuetze", "stufe", "summe",
+      "taube", "teich", "telefon", "tempel", "theater", "thron", "tofu", "topas", "torbogen", "trapez",
+      "tresor", "tribuene", "trommel", "truhe", "tulpe", "uhu", "ukulele", "uniform", "urne", "ventilator",
+      "villa", "viole", "vitrine", "waffel", "walnuss", "wanderstab", "waschbaer", "webstuhl", "weide", "wirbel",
+      "wolfram", "wolle", "wurzel", "xylophon", "yeti", "zeppelin", "zopf", "zunder"
     ];
+
+    const WORD_LOOKUP = new Set(WORD_POOL);
 
     const state = loadState();
     let wakeLockSentinel = null;
+    let mediaWakeVideo = null;
+    let mediaWakeCanvas = null;
+    let mediaWakeTimer = null;
     let uiNotice = "";
     let noticeTimeout = null;
 
@@ -1302,7 +1362,7 @@
     render();
 
     if (state.keepAwake) {
-      requestWakeLock();
+      void syncWakeLockState();
     }
 
     function attachEvents() {
@@ -1348,7 +1408,9 @@
         }
 
         commit(() => {
-          state.words = drawWords(state.words);
+          const nextRound = drawWords(state.wordQueue, state.words);
+          state.words = nextRound.words;
+          state.wordQueue = nextRound.wordQueue;
           state.marks = Array(25).fill(null);
           state.locked = false;
         });
@@ -1391,21 +1453,37 @@
 
       wakeBtn.addEventListener("click", async () => {
         if (state.keepAwake) {
-          await releaseWakeLock();
-          flashNotice("Bildschirm darf wieder einschlafen.");
+          state.keepAwake = false;
+          saveState();
+          render();
+          await syncWakeLockState();
+          flashNotice(document.fullscreenElement
+            ? "Manuelles Wachhalten ist aus. Im Vollbild bleibt der Auto-Modus aktiv."
+            : "Bildschirm darf wieder einschlafen.");
           return;
         }
 
-        await requestWakeLock();
+        state.keepAwake = true;
+        saveState();
+        render();
+        const enabled = await requestWakeLock(false, true);
+        if (!enabled) {
+          state.keepAwake = false;
+          saveState();
+          render();
+        }
       });
 
       document.addEventListener("visibilitychange", async () => {
-        if (document.visibilityState === "visible" && state.keepAwake && !wakeLockSentinel) {
+        if (document.visibilityState === "visible" && shouldKeepAwake() && !isWakeLockActive()) {
           await requestWakeLock(true);
         }
       });
 
-      document.addEventListener("fullscreenchange", render);
+      document.addEventListener("fullscreenchange", () => {
+        render();
+        void syncWakeLockState();
+      });
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && settingsOpen) {
           setSettingsOpen(false);
@@ -1517,6 +1595,18 @@
     }
 
     function overlayMarkup(markerInfo) {
+      if (markerInfo.overlayClass === "red" || markerInfo.overlayClass === "blue") {
+        return `<div class="overlay ${markerInfo.overlayClass} fill" aria-hidden="true"></div>`;
+      }
+
+      if (markerInfo.overlayClass === "neutral") {
+        return `
+          <div class="overlay ${markerInfo.overlayClass} centered">
+            <div class="overlay-badge">${escapeHtml(markerInfo.name)}</div>
+          </div>
+        `;
+      }
+
       return `
         <div class="overlay ${markerInfo.overlayClass}">
           <div class="overlay-word top">${escapeHtml(markerInfo.boardLabel)}</div>
@@ -1554,6 +1644,7 @@
       const previous = state.history.pop();
       state.words = [...previous.words];
       state.marks = [...previous.marks];
+      state.wordQueue = normalizeWordQueue(previous.wordQueue, previous.words);
       state.startTeam = previous.startTeam;
       state.locked = previous.locked;
       state.keepAwake = previous.keepAwake;
@@ -1579,6 +1670,7 @@
       return {
         words: [...state.words],
         marks: [...state.marks],
+        wordQueue: [...state.wordQueue],
         startTeam: state.startTeam,
         locked: state.locked,
         keepAwake: state.keepAwake
@@ -1602,6 +1694,7 @@
         return {
           words: [...parsed.words],
           marks: [...parsed.marks],
+          wordQueue: normalizeWordQueue(parsed.wordQueue, parsed.words),
           cardVariant: Object.prototype.hasOwnProperty.call(CARD_VARIANTS, parsed.cardVariant)
             ? parsed.cardVariant
             : "contrast",
@@ -1618,9 +1711,11 @@
     }
 
     function createDefaultState() {
+      const initialRound = drawWords();
       return {
-        words: drawWords(),
+        words: initialRound.words,
         marks: Array(25).fill(null),
+        wordQueue: initialRound.wordQueue,
         cardVariant: "contrast",
         startTeam: "red",
         locked: false,
@@ -1636,6 +1731,7 @@
         value.words.length === 25 &&
         Array.isArray(value.marks) &&
         value.marks.length === 25 &&
+        (value.wordQueue === undefined || isValidWordQueue(value.wordQueue, value.words)) &&
         (value.startTeam === "red" || value.startTeam === "blue") &&
         typeof value.locked === "boolean" &&
         value.words.every((word) => typeof word === "string" && word.length > 0) &&
@@ -1654,6 +1750,7 @@
       const payload = {
         words: state.words,
         marks: state.marks,
+        wordQueue: state.wordQueue,
         cardVariant: state.cardVariant,
         startTeam: state.startTeam,
         locked: state.locked,
@@ -1668,20 +1765,51 @@
       }
     }
 
-    function drawWords(previousWords = []) {
-      const excluded = new Set(previousWords);
-      const available = WORD_POOL.filter((word) => !excluded.has(word));
-      const source = available.length >= 25 ? available : WORD_POOL;
-      const pool = [...source];
+    function isValidWordQueue(value, currentWords = []) {
+      const currentSet = new Set(currentWords);
+      return Array.isArray(value) &&
+        new Set(value).size === value.length &&
+        value.every((word) => WORD_LOOKUP.has(word) && !currentSet.has(word));
+    }
 
-      for (let index = pool.length - 1; index > 0; index -= 1) {
+    function normalizeWordQueue(value, currentWords = []) {
+      return isValidWordQueue(value, currentWords)
+        ? [...value]
+        : createShuffledWordQueue(currentWords);
+    }
+
+    function createShuffledWordQueue(excludedWords = []) {
+      const excluded = new Set(excludedWords);
+      const queue = WORD_POOL.filter((word) => !excluded.has(word));
+
+      for (let index = queue.length - 1; index > 0; index -= 1) {
         const swapIndex = Math.floor(Math.random() * (index + 1));
-        const temp = pool[index];
-        pool[index] = pool[swapIndex];
-        pool[swapIndex] = temp;
+        const temp = queue[index];
+        queue[index] = queue[swapIndex];
+        queue[swapIndex] = temp;
       }
 
-      return pool.slice(0, 25);
+      return queue;
+    }
+
+    function drawWords(wordQueue = [], currentWords = []) {
+      let queue = normalizeWordQueue(wordQueue, currentWords);
+      const words = [];
+      const wordSet = new Set();
+
+      while (words.length < 25) {
+        if (queue.length === 0) {
+          queue = createShuffledWordQueue(words);
+        }
+
+        const nextWord = queue.shift();
+        if (nextWord && !wordSet.has(nextWord)) {
+          wordSet.add(nextWord);
+          words.push(nextWord);
+        }
+      }
+
+      return { words, wordQueue: queue };
     }
 
     function nextMarkerInCycle(currentMarker) {
@@ -1706,54 +1834,158 @@
     }
 
     async function toggleFullscreen() {
+      const enteringFullscreen = !document.fullscreenElement;
+      const needsAutoWake = enteringFullscreen && !state.keepAwake;
+
       try {
-        if (document.fullscreenElement) {
+        if (!enteringFullscreen) {
           await document.exitFullscreen();
           return;
         }
 
+        if (needsAutoWake) {
+          await requestWakeLock(true, true);
+        }
+
         await document.documentElement.requestFullscreen();
       } catch (error) {
+        if (needsAutoWake && !state.keepAwake) {
+          await releaseWakeLock();
+        }
         flashNotice("Vollbild wird auf diesem Geraet nicht unterstuetzt.");
       }
     }
 
-    async function requestWakeLock(silent = false) {
-      if (!("wakeLock" in navigator)) {
-        state.keepAwake = false;
-        saveState();
-        render();
-        if (!silent) {
-          flashNotice("Wake Lock wird hier leider nicht unterstuetzt.");
+    function shouldKeepAwake() {
+      return state.keepAwake || Boolean(document.fullscreenElement);
+    }
+
+    function hasNativeWakeLock() {
+      return "wakeLock" in navigator;
+    }
+
+    function hasMediaWakeFallback() {
+      return typeof HTMLCanvasElement !== "undefined" && "captureStream" in HTMLCanvasElement.prototype;
+    }
+
+    function isMediaWakeActive() {
+      return Boolean(mediaWakeVideo && !mediaWakeVideo.paused);
+    }
+
+    function isWakeLockActive() {
+      return Boolean(wakeLockSentinel) || isMediaWakeActive();
+    }
+
+    function ensureMediaWakeVideo() {
+      if (mediaWakeVideo) {
+        return mediaWakeVideo;
+      }
+
+      if (!hasMediaWakeFallback()) {
+        return null;
+      }
+
+      mediaWakeCanvas = document.createElement("canvas");
+      mediaWakeCanvas.width = 32;
+      mediaWakeCanvas.height = 32;
+      const context = mediaWakeCanvas.getContext("2d");
+      let frame = 0;
+      const drawFrame = () => {
+        if (!context) {
+          return;
         }
-        return;
+
+        frame += 1;
+        context.fillStyle = frame % 2 === 0 ? "#050505" : "#080808";
+        context.fillRect(0, 0, mediaWakeCanvas.width, mediaWakeCanvas.height);
+      };
+
+      drawFrame();
+      mediaWakeTimer = window.setInterval(drawFrame, 15000);
+
+      mediaWakeVideo = document.createElement("video");
+      mediaWakeVideo.className = "keep-awake-video";
+      mediaWakeVideo.muted = true;
+      mediaWakeVideo.loop = true;
+      mediaWakeVideo.playsInline = true;
+      mediaWakeVideo.setAttribute("playsinline", "");
+      mediaWakeVideo.setAttribute("webkit-playsinline", "");
+      mediaWakeVideo.srcObject = mediaWakeCanvas.captureStream(1);
+      document.body.appendChild(mediaWakeVideo);
+      return mediaWakeVideo;
+    }
+
+    async function requestMediaWakeLock(silent = false, userInitiated = false) {
+      if (!hasMediaWakeFallback()) {
+        return false;
+      }
+
+      if (!mediaWakeVideo && !userInitiated) {
+        return false;
+      }
+
+      const video = ensureMediaWakeVideo();
+      if (!video) {
+        return false;
       }
 
       try {
-        wakeLockSentinel = await navigator.wakeLock.request("screen");
-        wakeLockSentinel.addEventListener("release", () => {
-          wakeLockSentinel = null;
-          render();
-        });
-        state.keepAwake = true;
-        saveState();
+        await video.play();
         render();
         if (!silent) {
-          flashNotice("Bildschirm bleibt wach.");
+          flashNotice("Bildschirm bleibt mit iPad-Fallback aktiv.");
         }
+        return true;
       } catch (error) {
-        state.keepAwake = false;
-        saveState();
-        render();
         if (!silent) {
-          flashNotice("Wake Lock konnte nicht aktiviert werden.");
+          flashNotice("Zum Wachhalten auf dem iPad bitte Vollbild oder Wachhalten antippen.");
         }
+        return false;
       }
     }
 
-    async function releaseWakeLock() {
-      state.keepAwake = false;
+    async function requestWakeLock(silent = false, userInitiated = false) {
+      if (isWakeLockActive()) {
+        return true;
+      }
 
+      if (hasNativeWakeLock()) {
+        try {
+          wakeLockSentinel = await navigator.wakeLock.request("screen");
+          wakeLockSentinel.addEventListener("release", () => {
+            wakeLockSentinel = null;
+            render();
+            if (shouldKeepAwake() && document.visibilityState === "visible") {
+              void requestWakeLock(true);
+            }
+          });
+          render();
+          if (!silent) {
+            flashNotice("Bildschirm bleibt wach.");
+          }
+          return true;
+        } catch (error) {
+          // Native Wake Lock fehlt oder ist gerade nicht verfuegbar. Fallback wird unten versucht.
+        }
+      }
+
+      const fallbackEnabled = await requestMediaWakeLock(silent, userInitiated);
+      if (fallbackEnabled) {
+        return true;
+      }
+
+      render();
+      if (!silent) {
+        if (hasNativeWakeLock()) {
+          flashNotice("Wake Lock konnte nicht aktiviert werden.");
+        } else {
+          flashNotice("Bildschirm wachhalten wird hier leider nicht angeboten.");
+        }
+      }
+      return false;
+    }
+
+    async function releaseWakeLock() {
       try {
         if (wakeLockSentinel) {
           await wakeLockSentinel.release();
@@ -1763,28 +1995,48 @@
       }
 
       wakeLockSentinel = null;
-      saveState();
+
+      if (mediaWakeVideo) {
+        mediaWakeVideo.pause();
+      }
+
       render();
     }
 
-    function syncWakeLockState() {
-      if (state.keepAwake && !wakeLockSentinel) {
-        requestWakeLock(true);
+    async function syncWakeLockState() {
+      if (shouldKeepAwake() && !isWakeLockActive()) {
+        await requestWakeLock(true);
       }
 
-      if (!state.keepAwake && wakeLockSentinel) {
-        releaseWakeLock();
+      if (!shouldKeepAwake() && isWakeLockActive()) {
+        await releaseWakeLock();
       }
     }
 
     function wakeLockLine() {
-      if (!("wakeLock" in navigator)) {
-        return "Bildschirm wachhalten wird von diesem Browser vermutlich nicht angeboten.";
+      if (shouldKeepAwake()) {
+        if (wakeLockSentinel) {
+          return document.fullscreenElement
+            ? "Im Vollbild bleibt der Bildschirm aktiv, solange der Browser den Wake Lock haelt."
+            : "Bildschirm bleibt aktiv, solange der Browser den Wake Lock haelt.";
+        }
+
+        if (isMediaWakeActive()) {
+          return document.fullscreenElement
+            ? "Im Vollbild laeuft ein iPad-Fallback ueber ein minimales Video, damit der Bildschirm eher wach bleibt."
+            : "Es laeuft ein iPad-Fallback ueber ein minimales Video, damit der Bildschirm eher wach bleibt.";
+        }
       }
 
-      return state.keepAwake
-        ? "Bildschirm bleibt aktiv, solange der Browser den Wake Lock haelt."
-        : "Wake Lock ist aus. Praktisch, wenn das Tablet waehrend der Runde offen liegen soll.";
+      if (hasNativeWakeLock()) {
+        return "Im Vollbild versuchen wir das Display automatisch wach zu halten. Der Schalter gilt auch ausserhalb des Vollbilds.";
+      }
+
+      if (hasMediaWakeFallback()) {
+        return "Auf iPads ohne Wake-Lock-API versuchen wir im Vollbild oder nach einem Tap einen Video-Fallback.";
+      }
+
+      return "Bildschirm wachhalten wird von diesem Browser vermutlich nicht angeboten.";
     }
 
     function escapeHtml(value) {
