@@ -202,6 +202,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 8px;
       min-height: 48px;
       padding: 10px 14px;
       border: 1px solid rgba(82, 53, 33, 0.14);
@@ -210,45 +211,61 @@
       color: var(--ink);
       font-weight: 900;
       letter-spacing: 0.04em;
-      cursor: pointer;
+      cursor: default;
       transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
 
-    .quick-marker:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 18px rgba(46, 31, 20, 0.08);
+    .quick-marker-bar.is-static .quick-marker:hover {
+      transform: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
 
-    .quick-marker.is-active {
-      transform: translateY(-1px);
-      border-color: rgba(61, 35, 18, 0.24);
-      box-shadow: 0 12px 20px rgba(46, 31, 20, 0.1);
-    }
-
-    .quick-marker.red.is-active {
-      background: linear-gradient(140deg, rgba(232, 165, 146, 0.95), rgba(191, 76, 53, 0.96));
-      color: #33150f;
-    }
-
-    .quick-marker.blue.is-active {
-      background: linear-gradient(140deg, rgba(164, 203, 235, 0.95), rgba(54, 105, 151, 0.96));
+    .quick-marker.blue {
+      background: linear-gradient(140deg, rgba(164, 203, 235, 0.74), rgba(54, 105, 151, 0.72));
       color: #0f2230;
     }
 
-    .quick-marker.neutral.is-active {
-      background: linear-gradient(140deg, rgba(248, 236, 215, 0.95), rgba(207, 177, 133, 0.96));
+    .quick-marker.red {
+      background: linear-gradient(140deg, rgba(232, 165, 146, 0.78), rgba(191, 76, 53, 0.74));
+      color: #33150f;
+    }
+
+    .quick-marker.neutral {
+      background: linear-gradient(140deg, rgba(248, 236, 215, 0.9), rgba(207, 177, 133, 0.84));
       color: #35261a;
     }
 
-    .quick-marker.black.is-active {
-      background: linear-gradient(140deg, rgba(90, 90, 90, 0.95), rgba(29, 29, 29, 0.98));
+    .quick-marker.black {
+      background: linear-gradient(140deg, rgba(90, 90, 90, 0.88), rgba(29, 29, 29, 0.96));
       color: #f7ede2;
     }
 
-    .quick-marker.erase.is-active {
-      background: linear-gradient(140deg, rgba(250, 241, 228, 0.95), rgba(215, 198, 172, 0.98));
+    .quick-marker.clear {
+      background: linear-gradient(140deg, rgba(250, 241, 228, 0.96), rgba(215, 198, 172, 0.98));
       color: #3d2e21;
+    }
+
+    .cycle-step {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.66);
+      font-size: 0.72rem;
+      letter-spacing: 0;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      flex-shrink: 0;
+    }
+
+    .meta-copy {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.4;
     }
 
     .stat-strip {
@@ -873,11 +890,6 @@
       color: #f7ede2;
     }
 
-    .marker-grid button.erase.is-active {
-      background: linear-gradient(140deg, rgba(250, 241, 228, 0.92), rgba(215, 198, 172, 0.98));
-      color: #3d2e21;
-    }
-
     .button-line {
       display: block;
       font-size: 0.77rem;
@@ -1070,7 +1082,7 @@
         <p class="eyebrow">Tabletop Companion</p>
         <h1>Codeboard</h1>
         <p class="intro">
-          Das Wortfeld steht im Fokus. Einstellungen und Marker bleiben per Drawer nur einen Tap entfernt.
+          Das Wortfeld steht im Fokus. Marker laufen direkt beim Tippen durch, Einstellungen bleiben per Drawer erreichbar.
         </p>
       </div>
       <div class="hero-actions">
@@ -1086,7 +1098,7 @@
           <div class="stat-strip" id="statStrip" aria-live="polite"></div>
           <div class="status-line" id="statusLine"></div>
         </div>
-        <div id="quickMarkerBar" class="quick-marker-bar" aria-label="Schnellzugriff Marker"></div>
+        <div id="quickMarkerBar" class="quick-marker-bar is-static" aria-label="Markier-Reihenfolge"></div>
         <div id="lockBanner" class="lock-banner" aria-live="polite">Spielfeld gesperrt. Zum Entsperren den Knopf rechts nutzen.</div>
         <div class="board-wrap">
           <div id="board" class="board" role="grid" aria-label="Codenames Wortfeld"></div>
@@ -1117,8 +1129,9 @@
           </div>
           <div class="meta-grid">
             <div class="meta-card">
-              <span class="meta-label">Aktiver Marker</span>
-              <span class="meta-value" id="activeMarkerValue">Rot</span>
+              <span class="meta-label">Markiermodus</span>
+              <span class="meta-value">Durchtippen</span>
+              <span class="meta-copy">Blau, Rot, Neutral, Peter, leer.</span>
             </div>
             <div class="meta-card">
               <span class="meta-label">Undo Schritte</span>
@@ -1137,12 +1150,11 @@
         </section>
 
         <section class="panel-block">
-          <h2>Marker</h2>
+          <h2>Tippen</h2>
           <p class="panel-copy">
-            Marker auswaehlen und danach auf ein Wort tippen. Derselbe Marker auf derselben Karte entfernt
-            die Abdeckung wieder.
+            Jede Karte schaltet beim Tippen selbst weiter: einmal Blau, dann Rot, danach Neutral,
+            dann Schwarzer Peter und beim fuenften Tap wieder leer.
           </p>
-          <div id="markerGrid" class="marker-grid" aria-label="Marker Auswahl"></div>
         </section>
 
         <section class="panel-block">
@@ -1160,6 +1172,7 @@
           <h2>Am Tisch</h2>
           <ul class="note-list">
             <li>Oben bleibt die normale Leserichtung, unten die 180-Grad-Drehung. Der Stil-Schalter hilft beim Feintuning.</li>
+            <li>Das Markieren laeuft zyklisch direkt auf der Karte: Blau, Rot, Neutral, Schwarzer Peter, leer.</li>
             <li>Der Zustand bleibt lokal auf diesem Geraet gespeichert, falls die Seite neu geladen wird.</li>
             <li>Neue Runde tauscht alle 25 Begriffe gegen neue aus und setzt Marker zurueck.</li>
             <li>Eigene Wortliste, damit die App stilistisch passt, aber nicht die offizielle Kartenliste kopiert.</li>
@@ -1198,12 +1211,10 @@
         short: "SP",
         boardLabel: "SCHWARZER PETER",
         overlayClass: "black"
-      },
-      erase: {
-        name: "Radierer",
-        short: "RADIEREN"
       }
     };
+
+    const MARKER_CYCLE = ["blue", "red", "neutral", "black", null];
 
     const CARD_VARIANTS = {
       balanced: {
@@ -1269,8 +1280,6 @@
     const quickMarkerBar = document.getElementById("quickMarkerBar");
     const lockBanner = document.getElementById("lockBanner");
     const variantGrid = document.getElementById("variantGrid");
-    const markerGrid = document.getElementById("markerGrid");
-    const activeMarkerValue = document.getElementById("activeMarkerValue");
     const undoCountValue = document.getElementById("undoCountValue");
     const deviceLine = document.getElementById("deviceLine");
     const startRedBtn = document.getElementById("startRedBtn");
@@ -1287,8 +1296,7 @@
 
     let settingsOpen = false;
 
-    renderMarkerButtons();
-    renderQuickMarkers();
+    renderCycleLegend();
     renderVariantButtons();
     attachEvents();
     render();
@@ -1310,38 +1318,11 @@
         }
 
         const index = Number(card.dataset.index);
-        const nextMarker = state.activeMarker === "erase" ? null : state.activeMarker;
         const currentMarker = state.marks[index];
 
-        if (nextMarker === null && currentMarker === null) {
-          return;
-        }
-
         commit(() => {
-          state.marks[index] = currentMarker === nextMarker ? null : nextMarker;
+          state.marks[index] = nextMarkerInCycle(currentMarker);
         });
-      });
-
-      markerGrid.addEventListener("click", (event) => {
-        const button = event.target.closest("button[data-marker]");
-        if (!button) {
-          return;
-        }
-
-        state.activeMarker = button.dataset.marker;
-        saveState();
-        render();
-      });
-
-      quickMarkerBar.addEventListener("click", (event) => {
-        const button = event.target.closest("button[data-marker]");
-        if (!button) {
-          return;
-        }
-
-        state.activeMarker = button.dataset.marker;
-        saveState();
-        render();
       });
 
       variantGrid.addEventListener("click", (event) => {
@@ -1439,7 +1420,6 @@
       board.innerHTML = state.words.map((word, index) => cardMarkup(word, state.marks[index], index)).join("");
       statStrip.innerHTML = statMarkup();
       statusLine.textContent = uiNotice || defaultStatusText();
-      activeMarkerValue.textContent = MARKERS[state.activeMarker].name;
       undoCountValue.textContent = String(state.history.length);
       startRedBtn.classList.toggle("is-active", state.startTeam === "red");
       startBlueBtn.classList.toggle("is-active", state.startTeam === "blue");
@@ -1451,8 +1431,6 @@
       deviceLine.textContent = wakeLockLine();
       panelBackdrop.hidden = !settingsOpen;
       document.body.classList.toggle("settings-open", settingsOpen);
-      syncMarkerButtonState();
-      syncQuickMarkerState();
       syncVariantButtonState();
     }
 
@@ -1461,22 +1439,17 @@
       render();
     }
 
-    function renderMarkerButtons() {
-      markerGrid.innerHTML = Object.entries(MARKERS).map(([key, marker]) => `
-        <button type="button" class="${key}" data-marker="${key}">
-          <span class="button-line">Marker</span>
-          <span class="button-title">${escapeHtml(marker.name)}</span>
-        </button>
-      `).join("");
-    }
-
-    function renderQuickMarkers() {
-      const quickKeys = ["red", "blue", "neutral", "black", "erase"];
-      quickMarkerBar.innerHTML = quickKeys.map((key) => `
-        <button type="button" class="quick-marker ${key}" data-marker="${key}">
-          ${escapeHtml(MARKERS[key].name)}
-        </button>
-      `).join("");
+    function renderCycleLegend() {
+      quickMarkerBar.innerHTML = MARKER_CYCLE.map((marker, index) => {
+        const label = marker ? MARKERS[marker].name : "Leer";
+        const tone = marker || "clear";
+        return `
+          <div class="quick-marker ${tone}">
+            <span class="cycle-step">${index + 1}</span>
+            <span>${escapeHtml(label)}</span>
+          </div>
+        `;
+      }).join("");
     }
 
     function renderVariantButtons() {
@@ -1487,18 +1460,6 @@
           <span class="variant-copy">${escapeHtml(variant.hint)}</span>
         </button>
       `).join("");
-    }
-
-    function syncMarkerButtonState() {
-      markerGrid.querySelectorAll("button[data-marker]").forEach((button) => {
-        button.classList.toggle("is-active", button.dataset.marker === state.activeMarker);
-      });
-    }
-
-    function syncQuickMarkerState() {
-      quickMarkerBar.querySelectorAll("button[data-marker]").forEach((button) => {
-        button.classList.toggle("is-active", button.dataset.marker === state.activeMarker);
-      });
     }
 
     function syncVariantButtonState() {
@@ -1593,7 +1554,6 @@
       const previous = state.history.pop();
       state.words = [...previous.words];
       state.marks = [...previous.marks];
-      state.activeMarker = previous.activeMarker;
       state.startTeam = previous.startTeam;
       state.locked = previous.locked;
       state.keepAwake = previous.keepAwake;
@@ -1619,7 +1579,6 @@
       return {
         words: [...state.words],
         marks: [...state.marks],
-        activeMarker: state.activeMarker,
         startTeam: state.startTeam,
         locked: state.locked,
         keepAwake: state.keepAwake
@@ -1643,7 +1602,6 @@
         return {
           words: [...parsed.words],
           marks: [...parsed.marks],
-          activeMarker: parsed.activeMarker,
           cardVariant: Object.prototype.hasOwnProperty.call(CARD_VARIANTS, parsed.cardVariant)
             ? parsed.cardVariant
             : "contrast",
@@ -1663,7 +1621,6 @@
       return {
         words: drawWords(),
         marks: Array(25).fill(null),
-        activeMarker: "red",
         cardVariant: "contrast",
         startTeam: "red",
         locked: false,
@@ -1679,7 +1636,6 @@
         value.words.length === 25 &&
         Array.isArray(value.marks) &&
         value.marks.length === 25 &&
-        Object.prototype.hasOwnProperty.call(MARKERS, value.activeMarker) &&
         (value.startTeam === "red" || value.startTeam === "blue") &&
         typeof value.locked === "boolean" &&
         value.words.every((word) => typeof word === "string" && word.length > 0) &&
@@ -1698,7 +1654,6 @@
       const payload = {
         words: state.words,
         marks: state.marks,
-        activeMarker: state.activeMarker,
         cardVariant: state.cardVariant,
         startTeam: state.startTeam,
         locked: state.locked,
@@ -1729,11 +1684,13 @@
       return pool.slice(0, 25);
     }
 
-    function defaultStatusText() {
-      const action = state.activeMarker === "erase"
-        ? "Tippe auf ein Wort, um den Marker zu entfernen."
-        : `Aktiver Marker: ${MARKERS[state.activeMarker].name}.`;
+    function nextMarkerInCycle(currentMarker) {
+      const currentIndex = MARKER_CYCLE.indexOf(currentMarker);
+      return MARKER_CYCLE[(currentIndex + 1) % MARKER_CYCLE.length];
+    }
 
+    function defaultStatusText() {
+      const action = "Tippe auf ein Wort: Blau, Rot, Neutral, Schwarzer Peter, dann wieder leer.";
       const safety = state.locked ? " Spielfeld ist gesperrt." : "";
       return action + safety;
     }
