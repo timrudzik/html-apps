@@ -1210,6 +1210,7 @@
   </main>
   <div id="panelBackdrop" class="panel-backdrop" hidden></div>
 
+  <script src="word-pool-extra.js"></script>
   <script>
     const STORAGE_KEY = "codeboard-state-v1";
     const HISTORY_LIMIT = 60;
@@ -1266,7 +1267,7 @@
       }
     };
 
-    const WORD_POOL = [
+    const BASE_WORD_POOL = [
       "anker", "apfel", "arena", "armband", "atlas", "auto", "bahn", "balkon", "ball", "bambus",
       "bank", "baron", "batterie", "becher", "beet", "berg", "bett", "biber", "bild", "birke",
       "blatt", "blitz", "blume", "bombe", "bohne", "boot", "brille", "bronze", "brunnen", "buch",
@@ -1324,6 +1325,10 @@
       "wolfram", "wolle", "wurzel", "xylophon", "yeti", "zeppelin", "zopf", "zunder"
     ];
 
+    const EXTRA_WORD_POOL = Array.isArray(window.CODEBOARD_EXTRA_WORD_POOL)
+      ? window.CODEBOARD_EXTRA_WORD_POOL
+      : [];
+    const WORD_POOL = [...new Set([...BASE_WORD_POOL, ...EXTRA_WORD_POOL])];
     const WORD_LOOKUP = new Set(WORD_POOL);
 
     const state = loadState();
