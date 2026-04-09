@@ -418,8 +418,10 @@
 
     .word-box {
       display: inline-flex;
+      position: relative;
       align-items: center;
       justify-content: center;
+      max-width: 100%;
       min-width: min(76%, 10.5rem);
       min-height: 3.5rem;
       padding: 10px 14px;
@@ -433,6 +435,189 @@
         inset 0 -10px 14px rgba(111, 72, 43, 0.09),
         0 3px 8px rgba(70, 43, 24, 0.05);
       backdrop-filter: blur(2px);
+    }
+
+    .board[data-card-variant="balanced"] .word-row.top .word-box {
+      color: #2c4d3d;
+    }
+
+    .board[data-card-variant="balanced"] .word-row.bottom .word-box {
+      color: #7a4135;
+    }
+
+    .board[data-card-variant="contrast"] .card {
+      background: linear-gradient(180deg, #ecd9b9, #d5b57f);
+      box-shadow:
+        inset 0 0 0 1px rgba(60, 38, 22, 0.16),
+        0 14px 18px rgba(82, 53, 33, 0.08);
+    }
+
+    .board[data-card-variant="contrast"] .card::after {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%);
+      mix-blend-mode: normal;
+    }
+
+    .board[data-card-variant="contrast"] .word-row {
+      letter-spacing: 0.09em;
+      text-shadow: none;
+    }
+
+    .board[data-card-variant="contrast"] .word-box {
+      min-width: min(82%, 11rem);
+      min-height: 3.35rem;
+      background: #fffaf1;
+      border: 2px solid rgba(36, 26, 18, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
+    }
+
+    .board[data-card-variant="contrast"] .word-row.top .word-box,
+    .board[data-card-variant="contrast"] .word-row.bottom .word-box {
+      color: #241a12;
+    }
+
+    .board[data-card-variant="contrast"] .word-divider {
+      width: 72%;
+      height: 5px;
+      background: rgba(78, 51, 31, 0.42);
+      box-shadow: none;
+      opacity: 1;
+    }
+
+    .board[data-card-variant="rails"] .card-face {
+      padding-inline: 16px;
+    }
+
+    .board[data-card-variant="rails"] .word-row {
+      justify-content: flex-start;
+    }
+
+    .board[data-card-variant="rails"] .word-box {
+      min-width: min(68%, 9rem);
+      min-height: 3.1rem;
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(248, 239, 223, 0.92), rgba(228, 205, 171, 0.9)),
+        rgba(247, 235, 214, 0.86);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 2px 6px rgba(70, 43, 24, 0.05);
+    }
+
+    .board[data-card-variant="rails"] .word-row.top .word-box,
+    .board[data-card-variant="rails"] .word-row.bottom .word-box {
+      margin-right: auto;
+    }
+
+    .board[data-card-variant="rails"] .word-row.top .word-box {
+      color: #264233;
+    }
+
+    .board[data-card-variant="rails"] .word-row.bottom .word-box {
+      color: #66362c;
+    }
+
+    .board[data-card-variant="rails"] .word-divider {
+      width: 54%;
+      height: 3px;
+      box-shadow: none;
+      opacity: 0.88;
+    }
+
+    .board[data-card-variant="wayfinder"] .word-row {
+      text-shadow: none;
+    }
+
+    .board[data-card-variant="wayfinder"] .word-box {
+      min-width: min(80%, 11rem);
+      padding: 10px 14px 12px 34px;
+      background: #fff8ee;
+      border-color: rgba(78, 55, 34, 0.16);
+    }
+
+    .board[data-card-variant="wayfinder"] .word-box::before,
+    .board[data-card-variant="wayfinder"] .word-box::after {
+      content: "";
+      position: absolute;
+      opacity: 1;
+    }
+
+    .board[data-card-variant="wayfinder"] .word-box::before {
+      left: 12px;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      transform: translateY(-50%);
+    }
+
+    .board[data-card-variant="wayfinder"] .word-box::after {
+      left: 28px;
+      right: 14px;
+      bottom: 8px;
+      height: 3px;
+      border-radius: 999px;
+    }
+
+    .board[data-card-variant="wayfinder"] .word-row.top .word-box {
+      color: #244636;
+    }
+
+    .board[data-card-variant="wayfinder"] .word-row.top .word-box::before {
+      background: #244636;
+      box-shadow: 0 0 0 4px rgba(36, 70, 54, 0.14);
+    }
+
+    .board[data-card-variant="wayfinder"] .word-row.top .word-box::after {
+      background: linear-gradient(90deg, rgba(36, 70, 54, 0.52), rgba(36, 70, 54, 0.16));
+    }
+
+    .board[data-card-variant="wayfinder"] .word-row.bottom .word-box {
+      color: #7a4135;
+    }
+
+    .board[data-card-variant="wayfinder"] .word-row.bottom .word-box::before {
+      background: #7a4135;
+      box-shadow: 0 0 0 4px rgba(122, 65, 53, 0.12);
+    }
+
+    .board[data-card-variant="wayfinder"] .word-row.bottom .word-box::after {
+      background: linear-gradient(90deg, rgba(122, 65, 53, 0.52), rgba(122, 65, 53, 0.16));
+    }
+
+    .board[data-card-variant="wayfinder"] .word-divider {
+      width: 46%;
+      opacity: 0.48;
+      box-shadow: none;
+    }
+
+    .board[data-card-variant="signal"] .card {
+      background:
+        linear-gradient(180deg, rgba(225, 236, 227, 0.74), rgba(225, 236, 227, 0.28) 33%, rgba(243, 236, 227, 0.16) 50%, rgba(246, 228, 221, 0.28) 67%, rgba(246, 228, 221, 0.74)),
+        linear-gradient(180deg, #ead5b2, #d7bc92);
+    }
+
+    .board[data-card-variant="signal"] .word-row {
+      text-shadow: none;
+    }
+
+    .board[data-card-variant="signal"] .word-row.top .word-box {
+      color: #234032;
+      border-color: rgba(35, 64, 50, 0.18);
+      background: linear-gradient(180deg, #f4faf5, #dfe9df);
+    }
+
+    .board[data-card-variant="signal"] .word-row.bottom .word-box {
+      color: #6b352a;
+      border-color: rgba(107, 53, 42, 0.18);
+      background: linear-gradient(180deg, #fcf3f1, #efd8d2);
+    }
+
+    .board[data-card-variant="signal"] .word-divider {
+      width: 66%;
+      box-shadow: none;
+      opacity: 0.96;
+      background:
+        linear-gradient(90deg, rgba(35, 64, 50, 0), rgba(35, 64, 50, 0.24), rgba(107, 53, 42, 0.24), rgba(107, 53, 42, 0));
     }
 
     .word-divider {
@@ -615,6 +800,7 @@
     }
 
     .segment,
+    .variant-grid,
     .marker-grid,
     .action-grid {
       display: grid;
@@ -630,11 +816,16 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .variant-grid {
+      grid-template-columns: 1fr;
+    }
+
     .action-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .segment button,
+    .variant-grid button,
     .marker-grid button,
     .action-grid button {
       min-height: 56px;
@@ -645,12 +836,19 @@
     }
 
     .segment button.is-active,
+    .variant-grid button.is-active,
     .marker-grid button.is-active {
       border-color: rgba(61, 35, 18, 0.22);
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.84),
         0 12px 22px rgba(46, 31, 20, 0.1);
       transform: translateY(-1px);
+    }
+
+    .variant-grid button {
+      min-height: 72px;
+      padding: 14px 16px;
+      text-align: left;
     }
 
     .segment button.red.is-active,
@@ -693,6 +891,17 @@
       margin-top: 4px;
       font-size: 1rem;
       letter-spacing: -0.02em;
+    }
+
+    .variant-copy {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: none;
     }
 
     .meta-grid {
@@ -919,6 +1128,15 @@
         </section>
 
         <section class="panel-block">
+          <h2>Lesbarkeit</h2>
+          <p class="panel-copy">
+            Fuenf Kartenvarianten setzen unterschiedliche Ideen aus der Recherche um: mehr Kontrast,
+            mehr Abstand zur Mitte, Orientierungscues oder farbliche Trennung der Seiten.
+          </p>
+          <div id="variantGrid" class="variant-grid" aria-label="Kartenvarianten"></div>
+        </section>
+
+        <section class="panel-block">
           <h2>Marker</h2>
           <p class="panel-copy">
             Marker auswaehlen und danach auf ein Wort tippen. Derselbe Marker auf derselben Karte entfernt
@@ -941,7 +1159,7 @@
         <section class="panel-block">
           <h2>Am Tisch</h2>
           <ul class="note-list">
-            <li>Die Worte sind absichtlich von beiden Seiten lesbar: oben normal, unten gedreht.</li>
+            <li>Oben bleibt die normale Leserichtung, unten die 180-Grad-Drehung. Der Stil-Schalter hilft beim Feintuning.</li>
             <li>Der Zustand bleibt lokal auf diesem Geraet gespeichert, falls die Seite neu geladen wird.</li>
             <li>Neue Runde tauscht alle 25 Begriffe gegen neue aus und setzt Marker zurueck.</li>
             <li>Eigene Wortliste, damit die App stilistisch passt, aber nicht die offizielle Kartenliste kopiert.</li>
@@ -987,6 +1205,29 @@
       }
     };
 
+    const CARD_VARIANTS = {
+      balanced: {
+        name: "Ausgewogen",
+        hint: "Zwei ruhige Wortfelder mit moderatem Kontrast."
+      },
+      contrast: {
+        name: "Klartext",
+        hint: "Maximaler Kontrast, flache Labels, wenig visueller Nebel."
+      },
+      rails: {
+        name: "Kanten",
+        hint: "Wortfelder kleben eher an den Kartenenden statt an der Mitte."
+      },
+      wayfinder: {
+        name: "Wegweiser",
+        hint: "Startpunkt und Baseline markieren die Leserichtung klarer."
+      },
+      signal: {
+        name: "Signal",
+        hint: "Obere und untere Seite sind zusaetzlich farblich getrennt."
+      }
+    };
+
     const WORD_POOL = [
       "anker", "apfel", "arena", "armband", "atlas", "auto", "bahn", "balkon", "ball", "bambus",
       "bank", "baron", "batterie", "becher", "beet", "berg", "bett", "biber", "bild", "birke",
@@ -1027,6 +1268,7 @@
     const statusLine = document.getElementById("statusLine");
     const quickMarkerBar = document.getElementById("quickMarkerBar");
     const lockBanner = document.getElementById("lockBanner");
+    const variantGrid = document.getElementById("variantGrid");
     const markerGrid = document.getElementById("markerGrid");
     const activeMarkerValue = document.getElementById("activeMarkerValue");
     const undoCountValue = document.getElementById("undoCountValue");
@@ -1047,6 +1289,7 @@
 
     renderMarkerButtons();
     renderQuickMarkers();
+    renderVariantButtons();
     attachEvents();
     render();
 
@@ -1099,6 +1342,18 @@
         state.activeMarker = button.dataset.marker;
         saveState();
         render();
+      });
+
+      variantGrid.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-variant]");
+        if (!button || button.dataset.variant === state.cardVariant) {
+          return;
+        }
+
+        state.cardVariant = button.dataset.variant;
+        saveState();
+        render();
+        flashNotice(`Kartenstil: ${CARD_VARIANTS[state.cardVariant].name}.`);
       });
 
       startRedBtn.addEventListener("click", () => setStartTeam("red"));
@@ -1178,6 +1433,7 @@
     }
 
     function render() {
+      board.dataset.cardVariant = state.cardVariant;
       board.classList.toggle("locked", state.locked);
       lockBanner.classList.toggle("show", state.locked);
       board.innerHTML = state.words.map((word, index) => cardMarkup(word, state.marks[index], index)).join("");
@@ -1197,6 +1453,7 @@
       document.body.classList.toggle("settings-open", settingsOpen);
       syncMarkerButtonState();
       syncQuickMarkerState();
+      syncVariantButtonState();
     }
 
     function setSettingsOpen(nextOpen) {
@@ -1222,6 +1479,16 @@
       `).join("");
     }
 
+    function renderVariantButtons() {
+      variantGrid.innerHTML = Object.entries(CARD_VARIANTS).map(([key, variant]) => `
+        <button type="button" data-variant="${key}">
+          <span class="button-line">Lesestil</span>
+          <span class="button-title">${escapeHtml(variant.name)}</span>
+          <span class="variant-copy">${escapeHtml(variant.hint)}</span>
+        </button>
+      `).join("");
+    }
+
     function syncMarkerButtonState() {
       markerGrid.querySelectorAll("button[data-marker]").forEach((button) => {
         button.classList.toggle("is-active", button.dataset.marker === state.activeMarker);
@@ -1231,6 +1498,12 @@
     function syncQuickMarkerState() {
       quickMarkerBar.querySelectorAll("button[data-marker]").forEach((button) => {
         button.classList.toggle("is-active", button.dataset.marker === state.activeMarker);
+      });
+    }
+
+    function syncVariantButtonState() {
+      variantGrid.querySelectorAll("button[data-variant]").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.variant === state.cardVariant);
       });
     }
 
@@ -1371,6 +1644,9 @@
           words: [...parsed.words],
           marks: [...parsed.marks],
           activeMarker: parsed.activeMarker,
+          cardVariant: Object.prototype.hasOwnProperty.call(CARD_VARIANTS, parsed.cardVariant)
+            ? parsed.cardVariant
+            : "contrast",
           startTeam: parsed.startTeam,
           locked: parsed.locked,
           keepAwake: Boolean(parsed.keepAwake),
@@ -1388,6 +1664,7 @@
         words: drawWords(),
         marks: Array(25).fill(null),
         activeMarker: "red",
+        cardVariant: "contrast",
         startTeam: "red",
         locked: false,
         keepAwake: false,
@@ -1422,6 +1699,7 @@
         words: state.words,
         marks: state.marks,
         activeMarker: state.activeMarker,
+        cardVariant: state.cardVariant,
         startTeam: state.startTeam,
         locked: state.locked,
         keepAwake: state.keepAwake,
