@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Codeboard Loesungskarten</title>
   <style>
-    :root { --bg:#f0e6d6; --ink:#241a12; --line:rgba(64,39,20,.15); --paper:#fff8ee; --shadow:0 14px 30px rgba(56,37,22,.14); }
+    :root { --bg:#f0e6d6; --ink:#241a12; --line:rgba(64,39,20,.15); --paper:#fff8ee; --shadow:0 14px 30px rgba(56,37,22,.14); --cell:100px; --gap:8px; }
     *{box-sizing:border-box} body{margin:0;font-family:"Avenir Next","Segoe UI",sans-serif;background:linear-gradient(180deg,#f7efe0,var(--bg));color:var(--ink)}
-    .app{max-width:860px;margin:0 auto;padding:20px 12px 28px}
+    .app{max-width:980px;margin:0 auto;padding:20px 12px 14px;min-height:100dvh;display:flex;flex-direction:column}
     .head{display:flex;flex-wrap:wrap;gap:10px;align-items:end;justify-content:space-between;margin-bottom:12px}
     h1{margin:0;font-size:clamp(1.4rem,3vw,2.2rem)}
     .controls{display:flex;gap:8px;flex-wrap:wrap}
@@ -16,8 +16,10 @@
     button{cursor:pointer;background:#fff7ea;font-weight:700}
     .meta{padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:var(--shadow);display:flex;gap:12px;flex-wrap:wrap}
     .badge{padding:6px 10px;border-radius:999px;background:#efe4d2;border:1px solid var(--line);font-weight:700}
-    .board{margin-top:12px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--paper);box-shadow:var(--shadow)}
-    .cell{aspect-ratio:1/.7;border-radius:12px;border:1px solid rgba(0,0,0,.08)}
+    .board{margin-top:12px;display:grid;grid-template-columns:repeat(5,var(--cell));grid-auto-rows:calc(var(--cell) * .7);justify-content:center;align-content:center;gap:var(--gap);padding:10px;border:1px solid var(--line);border-radius:18px;background:var(--paper);box-shadow:var(--shadow);flex:1}
+    .cell{height:100%;border-radius:12px;border:1px solid rgba(0,0,0,.08)}
+    body.fullscreen .app{max-width:none;padding:8px}
+    body.fullscreen .head,body.fullscreen .meta{margin-bottom:8px}
     .red{background:linear-gradient(180deg,#da8c7b,#b44833)} .blue{background:linear-gradient(180deg,#8db7da,#346794)} .neutral{background:linear-gradient(180deg,#ead6b8,#c2a076)} .black{background:linear-gradient(180deg,#666,#1f1f1f)}
   </style>
 </head>
@@ -30,6 +32,7 @@
       <div class="controls">
         <input id="cardInput" type="number" min="1" max="1000" value="1" inputmode="numeric">
         <button id="randomBtn" type="button">Zufall</button>
+        <button id="fullscreenBtn" type="button">Vollbild</button>
       </div>
     </div>
     <div class="meta">
@@ -45,6 +48,7 @@
     const board = document.getElementById('board');
     const cardInput = document.getElementById('cardInput');
     const randomBtn = document.getElementById('randomBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
     const numberBadge = document.getElementById('numberBadge');
     const teamBadge = document.getElementById('teamBadge');
 
@@ -92,6 +96,9 @@
       numberBadge.textContent = `Karte #${solution.cardNumber}`;
       teamBadge.textContent = `Startteam: ${solution.startTeam === 'red' ? 'Rot' : 'Blau'}`;
       board.innerHTML = solution.layout.map((marker) => `<div class="cell ${marker}"></div>`).join('');
+      fullscreenBtn.textContent = document.fullscreenElement ? 'Vollbild aus' : 'Vollbild';
+      document.body.classList.toggle('fullscreen', Boolean(document.fullscreenElement));
+      fitBoard();
     }
 
     cardInput.addEventListener('change', () => render(Number.parseInt(cardInput.value, 10)));
@@ -99,6 +106,32 @@
       const next = 1 + Math.floor(Math.random() * TOTAL_SOLUTION_CARDS);
       render(next);
     });
+    fullscreenBtn.addEventListener('click', async () => {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await document.documentElement.requestFullscreen();
+      }
+    });
+    document.addEventListener('fullscreenchange', () => render(Number.parseInt(cardInput.value, 10)));
+    window.addEventListener('resize', fitBoard);
+    window.visualViewport?.addEventListener('resize', fitBoard);
+
+    function fitBoard() {
+      const app = document.querySelector('.app');
+      const head = document.querySelector('.head');
+      const meta = document.querySelector('.meta');
+      const appStyles = getComputedStyle(app);
+      const padY = (parseFloat(appStyles.paddingTop) || 0) + (parseFloat(appStyles.paddingBottom) || 0);
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const availableHeight = viewportHeight - head.offsetHeight - meta.offsetHeight - padY - 18;
+      const availableWidth = board.clientWidth - 20;
+      const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 8;
+      const byWidth = (availableWidth - 4 * gap) / 5;
+      const byHeight = (availableHeight - 4 * gap) / (5 * 0.7);
+      const cell = Math.max(34, Math.floor(Math.min(byWidth, byHeight)));
+      document.documentElement.style.setProperty('--cell', `${cell}px`);
+    }
 
     render(1);
   </script>
