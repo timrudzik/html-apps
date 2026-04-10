@@ -20,6 +20,13 @@
     .cell{height:100%;border-radius:12px;border:1px solid rgba(0,0,0,.08)}
     body.fullscreen .app{max-width:none;padding:8px}
     body.fullscreen .head,body.fullscreen .meta{margin-bottom:8px}
+    @media (orientation:landscape) and (max-height:520px){
+      .app{padding:8px 10px 10px}
+      .head{margin-bottom:8px;gap:8px}
+      .meta{padding:8px 10px;gap:8px}
+      input,button{min-height:36px;padding:6px 10px}
+      .board{margin-top:8px;padding:8px}
+    }
     .red{background:linear-gradient(180deg,#da8c7b,#b44833)} .blue{background:linear-gradient(180deg,#8db7da,#346794)} .neutral{background:linear-gradient(180deg,#ead6b8,#c2a076)} .black{background:linear-gradient(180deg,#666,#1f1f1f)}
   </style>
 </head>
@@ -123,13 +130,21 @@
       const meta = document.querySelector('.meta');
       const appStyles = getComputedStyle(app);
       const padY = (parseFloat(appStyles.paddingTop) || 0) + (parseFloat(appStyles.paddingBottom) || 0);
+      const padX = (parseFloat(appStyles.paddingLeft) || 0) + (parseFloat(appStyles.paddingRight) || 0);
       const viewportHeight = window.visualViewport?.height || window.innerHeight;
-      const availableHeight = viewportHeight - head.offsetHeight - meta.offsetHeight - padY - 18;
-      const availableWidth = board.clientWidth - 20;
+      const viewportWidth = window.visualViewport?.width || window.innerWidth;
+      const boardStyles = getComputedStyle(board);
+      const boardPadX = (parseFloat(boardStyles.paddingLeft) || 0) + (parseFloat(boardStyles.paddingRight) || 0);
+      const boardBorderX = (parseFloat(boardStyles.borderLeftWidth) || 0) + (parseFloat(boardStyles.borderRightWidth) || 0);
+      const boardOuterGap = parseFloat(boardStyles.marginTop) || 0;
+      const availableHeight = viewportHeight - head.offsetHeight - meta.offsetHeight - padY - boardOuterGap - 12;
+      const availableWidth = Math.min(board.clientWidth, viewportWidth - padX) - boardPadX - boardBorderX;
       const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 8;
       const byWidth = (availableWidth - 4 * gap) / 5;
       const byHeight = (availableHeight - 4 * gap) / (5 * 0.7);
-      const cell = Math.max(34, Math.floor(Math.min(byWidth, byHeight)));
+      const isSmallLandscape = window.matchMedia('(orientation: landscape) and (max-height: 520px)').matches;
+      const minCell = isSmallLandscape ? 24 : 34;
+      const cell = Math.max(minCell, Math.floor(Math.min(byWidth, byHeight)));
       document.documentElement.style.setProperty('--cell', `${cell}px`);
     }
 
