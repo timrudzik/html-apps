@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codeboard Loesungskarten</title>
+  <style>
+    :root { --bg:#f0e6d6; --ink:#241a12; --line:rgba(64,39,20,.15); --paper:#fff8ee; --shadow:0 14px 30px rgba(56,37,22,.14); }
+    *{box-sizing:border-box} body{margin:0;font-family:"Avenir Next","Segoe UI",sans-serif;background:linear-gradient(180deg,#f7efe0,var(--bg));color:var(--ink)}
+    .app{max-width:860px;margin:0 auto;padding:20px 12px 28px}
+    .head{display:flex;flex-wrap:wrap;gap:10px;align-items:end;justify-content:space-between;margin-bottom:12px}
+    h1{margin:0;font-size:clamp(1.4rem,3vw,2.2rem)}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    input,button{font:inherit;min-height:44px;border-radius:12px;border:1px solid var(--line);padding:8px 12px}
+    input{width:130px;background:#fff}
+    button{cursor:pointer;background:#fff7ea;font-weight:700}
+    .meta{padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:var(--shadow);display:flex;gap:12px;flex-wrap:wrap}
+    .badge{padding:6px 10px;border-radius:999px;background:#efe4d2;border:1px solid var(--line);font-weight:700}
+    .board{margin-top:12px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--paper);box-shadow:var(--shadow)}
+    .cell{aspect-ratio:1/.7;border-radius:12px;border:1px solid rgba(0,0,0,.08)}
+    .red{background:linear-gradient(180deg,#da8c7b,#b44833)} .blue{background:linear-gradient(180deg,#8db7da,#346794)} .neutral{background:linear-gradient(180deg,#ead6b8,#c2a076)} .black{background:linear-gradient(180deg,#666,#1f1f1f)}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="head">
+      <div>
+        <h1>Loesungskarten (1-1000)</h1>
+      </div>
+      <div class="controls">
+        <input id="cardInput" type="number" min="1" max="1000" value="1" inputmode="numeric">
+        <button id="randomBtn" type="button">Zufall</button>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="badge" id="numberBadge">Karte #1</span>
+      <span class="badge" id="teamBadge">Startteam: Rot</span>
+      <span class="badge">Rot 9 / Blau 8 / Neutral 7 / Schwarz 1</span>
+    </div>
+    <div id="board" class="board" aria-label="Loesungskarte"></div>
+  </main>
+  <script>
+    const TOTAL_SOLUTION_CARDS = 1000;
+
+    const board = document.getElementById('board');
+    const cardInput = document.getElementById('cardInput');
+    const randomBtn = document.getElementById('randomBtn');
+    const numberBadge = document.getElementById('numberBadge');
+    const teamBadge = document.getElementById('teamBadge');
+
+    function normalizeSolutionCardNumber(value) {
+      if (!Number.isFinite(value)) return 1;
+      return Math.min(TOTAL_SOLUTION_CARDS, Math.max(1, Math.floor(value)));
+    }
+
+    function createSeededRng(seed) {
+      let value = seed >>> 0;
+      return () => {
+        value = (value * 1664525 + 1013904223) >>> 0;
+        return value / 4294967296;
+      };
+    }
+
+    function shuffleWithRandom(values, random) {
+      const next = [...values];
+      for (let index = next.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(random() * (index + 1));
+        const temp = next[index];
+        next[index] = next[swapIndex];
+        next[swapIndex] = temp;
+      }
+      return next;
+    }
+
+    function buildSolutionCard(cardNumber) {
+      const normalized = normalizeSolutionCardNumber(cardNumber);
+      const random = createSeededRng(9001 + normalized * 2654435761);
+      const startTeam = random() < 0.5 ? 'red' : 'blue';
+      const targets = startTeam === 'red' ? { red: 9, blue: 8 } : { red: 8, blue: 9 };
+      const markerBag = [
+        ...Array(targets.red).fill('red'),
+        ...Array(targets.blue).fill('blue'),
+        ...Array(7).fill('neutral'),
+        'black'
+      ];
+      return { cardNumber: normalized, startTeam, layout: shuffleWithRandom(markerBag, random) };
+    }
+
+    function render(cardNumber) {
+      const solution = buildSolutionCard(cardNumber);
+      cardInput.value = String(solution.cardNumber);
+      numberBadge.textContent = `Karte #${solution.cardNumber}`;
+      teamBadge.textContent = `Startteam: ${solution.startTeam === 'red' ? 'Rot' : 'Blau'}`;
+      board.innerHTML = solution.layout.map((marker) => `<div class="cell ${marker}"></div>`).join('');
+    }
+
+    cardInput.addEventListener('change', () => render(Number.parseInt(cardInput.value, 10)));
+    randomBtn.addEventListener('click', () => {
+      const next = 1 + Math.floor(Math.random() * TOTAL_SOLUTION_CARDS);
+      render(next);
+    });
+
+    render(1);
+  </script>
+</body>
+</html>
