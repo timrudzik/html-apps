@@ -991,6 +991,63 @@
       line-height: 1.5;
     }
 
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .mode-grid button {
+      min-height: 56px;
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--ink);
+      font-weight: 800;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .mode-grid button.is-active {
+      border-color: rgba(61, 35, 18, 0.22);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.84),
+        0 12px 22px rgba(46, 31, 20, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .solution-controls {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .solution-controls label {
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .solution-controls input {
+      width: 100%;
+      min-height: 48px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(82, 53, 33, 0.15);
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .solution-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.86rem;
+    }
+
     @media (max-width: 760px) {
       .app-shell {
         width: min(100%, calc(100% - 14px));
@@ -1072,7 +1129,8 @@
       .segment,
       .marker-grid,
       .action-grid,
-      .meta-grid {
+      .meta-grid,
+      .mode-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1185,6 +1243,31 @@
         </section>
 
         <section class="panel-block">
+          <h2>Loesungskarte</h2>
+          <p class="panel-copy">
+            Waehle zwischen manuellem Markieren und Karten-Code. Mit Karten-Code wird jede Karte
+            beim Tippen sofort korrekt aufgedeckt.
+          </p>
+          <div class="mode-grid" aria-label="Markiermodus">
+            <button id="manualModeBtn" type="button">
+              <span class="button-line">Modus</span>
+              <span class="button-title">Manuell</span>
+            </button>
+            <button id="solutionModeBtn" type="button">
+              <span class="button-line">Modus</span>
+              <span class="button-title">Karten-Code</span>
+            </button>
+          </div>
+          <div id="solutionControls" class="solution-controls">
+            <label for="solutionCardInput">Loesungskarte (1-1000)</label>
+            <input id="solutionCardInput" type="number" min="1" max="1000" inputmode="numeric" />
+            <p class="solution-copy">
+              Gleiche Kartennummer in der separaten Loesungskarten-App nutzen, damit beide Geraete dieselbe Karte sehen.
+            </p>
+          </div>
+        </section>
+
+        <section class="panel-block">
           <h2>Aktionen</h2>
           <div class="action-grid">
             <button id="undoBtn" type="button">Undo</button>
@@ -1212,8 +1295,9 @@
 
   <script src="word-pool-extra.js"></script>
   <script>
-    const STORAGE_KEY = "codeboard-state-v1";
+    const STORAGE_KEY = "codeboard-state-v2";
     const HISTORY_LIMIT = 60;
+    const TOTAL_SOLUTION_CARDS = 1000;
 
     const MARKERS = {
       red: {
@@ -1243,6 +1327,10 @@
     };
 
     const MARKER_CYCLE = ["blue", "red", "neutral", "black", null];
+    const INTERACTION_MODES = {
+      manual: "manual",
+      solution: "solution"
+    };
 
     const CARD_VARIANTS = {
       balanced: {
@@ -1358,6 +1446,10 @@
     const lockBtn = document.getElementById("lockBtn");
     const wakeBtn = document.getElementById("wakeBtn");
     const panelBackdrop = document.getElementById("panelBackdrop");
+    const manualModeBtn = document.getElementById("manualModeBtn");
+    const solutionModeBtn = document.getElementById("solutionModeBtn");
+    const solutionControls = document.getElementById("solutionControls");
+    const solutionCardInput = document.getElementById("solutionCardInput");
 
     let settingsOpen = false;
 
@@ -1385,6 +1477,18 @@
         const index = Number(card.dataset.index);
         const currentMarker = state.marks[index];
 
+        if (state.interactionMode === INTERACTION_MODES.solution) {
+          const nextMarker = state.solutionLayout[index];
+          if (currentMarker === nextMarker) {
+            return;
+          }
+
+          commit(() => {
+            state.marks[index] = nextMarker;
+          });
+          return;
+        }
+
         commit(() => {
           state.marks[index] = nextMarkerInCycle(currentMarker);
         });
@@ -1404,6 +1508,11 @@
 
       startRedBtn.addEventListener("click", () => setStartTeam("red"));
       startBlueBtn.addEventListener("click", () => setStartTeam("blue"));
+      manualModeBtn.addEventListener("click", () => setInteractionMode(INTERACTION_MODES.manual));
+      solutionModeBtn.addEventListener("click", () => setInteractionMode(INTERACTION_MODES.solution));
+      solutionCardInput.addEventListener("change", () => {
+        setSolutionCardNumber(solutionCardInput.value);
+      });
 
       newRoundBtn.addEventListener("click", () => {
         const hasProgress = state.marks.some(Boolean);
@@ -1502,10 +1611,17 @@
       lockBanner.classList.toggle("show", state.locked);
       board.innerHTML = state.words.map((word, index) => cardMarkup(word, state.marks[index], index)).join("");
       statStrip.innerHTML = statMarkup();
+      renderCycleLegend();
       statusLine.textContent = uiNotice || defaultStatusText();
       undoCountValue.textContent = String(state.history.length);
       startRedBtn.classList.toggle("is-active", state.startTeam === "red");
       startBlueBtn.classList.toggle("is-active", state.startTeam === "blue");
+      startRedBtn.disabled = state.interactionMode === INTERACTION_MODES.solution;
+      startBlueBtn.disabled = state.interactionMode === INTERACTION_MODES.solution;
+      manualModeBtn.classList.toggle("is-active", state.interactionMode === INTERACTION_MODES.manual);
+      solutionModeBtn.classList.toggle("is-active", state.interactionMode === INTERACTION_MODES.solution);
+      solutionControls.hidden = state.interactionMode !== INTERACTION_MODES.solution;
+      solutionCardInput.value = String(state.solutionCardNumber);
       lockBtn.textContent = state.locked ? "Feld entsperren" : "Feld sperren";
       wakeBtn.textContent = state.keepAwake ? "Wachhalten aus" : "Bildschirm wachhalten";
       settingsBtn.textContent = settingsOpen ? "Panel schliessen" : "Einstellungen";
@@ -1523,6 +1639,16 @@
     }
 
     function renderCycleLegend() {
+      if (state.interactionMode === INTERACTION_MODES.solution) {
+        quickMarkerBar.innerHTML = `
+          <div class="quick-marker clear">
+            <span class="cycle-step">#</span>
+            <span>Karten-Code ${state.solutionCardNumber}: Tippen deckt direkt auf.</span>
+          </div>
+        `;
+        return;
+      }
+
       quickMarkerBar.innerHTML = MARKER_CYCLE.map((marker, index) => {
         const label = marker ? MARKERS[marker].name : "Leer";
         const tone = marker || "clear";
@@ -1631,6 +1757,10 @@
     }
 
     function setStartTeam(team) {
+      if (state.interactionMode === INTERACTION_MODES.solution) {
+        return;
+      }
+
       if (state.startTeam === team) {
         return;
       }
@@ -1638,6 +1768,34 @@
       commit(() => {
         state.startTeam = team;
       });
+    }
+
+    function setInteractionMode(mode) {
+      if (!Object.values(INTERACTION_MODES).includes(mode) || state.interactionMode === mode) {
+        return;
+      }
+
+      commit(() => {
+        state.interactionMode = mode;
+        if (mode === INTERACTION_MODES.solution) {
+          applySolutionCard(state.solutionCardNumber, false);
+        }
+      });
+    }
+
+    function setSolutionCardNumber(rawValue) {
+      const parsed = Number.parseInt(String(rawValue), 10);
+      const normalized = normalizeSolutionCardNumber(parsed);
+
+      if (normalized === state.solutionCardNumber) {
+        solutionCardInput.value = String(state.solutionCardNumber);
+        return;
+      }
+
+      commit(() => {
+        applySolutionCard(normalized);
+      });
+      flashNotice(`Loesungskarte ${normalized} geladen.`);
     }
 
     function undo() {
@@ -1651,6 +1809,13 @@
       state.marks = [...previous.marks];
       state.wordQueue = normalizeWordQueue(previous.wordQueue, previous.words);
       state.startTeam = previous.startTeam;
+      state.interactionMode = Object.values(INTERACTION_MODES).includes(previous.interactionMode)
+        ? previous.interactionMode
+        : INTERACTION_MODES.manual;
+      state.solutionCardNumber = normalizeSolutionCardNumber(previous.solutionCardNumber);
+      state.solutionLayout = isValidSolutionLayout(previous.solutionLayout)
+        ? [...previous.solutionLayout]
+        : buildSolutionCard(state.solutionCardNumber).layout;
       state.locked = previous.locked;
       state.keepAwake = previous.keepAwake;
       saveState();
@@ -1677,6 +1842,9 @@
         marks: [...state.marks],
         wordQueue: [...state.wordQueue],
         startTeam: state.startTeam,
+        interactionMode: state.interactionMode,
+        solutionCardNumber: state.solutionCardNumber,
+        solutionLayout: [...state.solutionLayout],
         locked: state.locked,
         keepAwake: state.keepAwake
       };
@@ -1696,7 +1864,7 @@
           return fallback;
         }
 
-        return {
+        const loaded = {
           words: [...parsed.words],
           marks: [...parsed.marks],
           wordQueue: normalizeWordQueue(parsed.wordQueue, parsed.words),
@@ -1704,12 +1872,28 @@
             ? parsed.cardVariant
             : "contrast",
           startTeam: parsed.startTeam,
+          interactionMode: Object.values(INTERACTION_MODES).includes(parsed.interactionMode)
+            ? parsed.interactionMode
+            : INTERACTION_MODES.manual,
+          solutionCardNumber: normalizeSolutionCardNumber(parsed.solutionCardNumber),
+          solutionLayout: isValidSolutionLayout(parsed.solutionLayout)
+            ? [...parsed.solutionLayout]
+            : buildSolutionCard(normalizeSolutionCardNumber(parsed.solutionCardNumber)).layout,
           locked: parsed.locked,
           keepAwake: Boolean(parsed.keepAwake),
           history: Array.isArray(parsed.history)
             ? parsed.history.filter(isValidSnapshot).slice(-HISTORY_LIMIT)
             : []
         };
+
+        if (loaded.interactionMode === INTERACTION_MODES.solution) {
+          const solution = buildSolutionCard(loaded.solutionCardNumber);
+          loaded.solutionCardNumber = solution.cardNumber;
+          loaded.solutionLayout = solution.layout;
+          loaded.startTeam = solution.startTeam;
+        }
+
+        return loaded;
       } catch (error) {
         return fallback;
       }
@@ -1723,6 +1907,9 @@
         wordQueue: initialRound.wordQueue,
         cardVariant: "contrast",
         startTeam: "red",
+        interactionMode: INTERACTION_MODES.manual,
+        solutionCardNumber: 1,
+        solutionLayout: buildSolutionCard(1).layout,
         locked: false,
         keepAwake: false,
         history: []
@@ -1738,6 +1925,9 @@
         value.marks.length === 25 &&
         (value.wordQueue === undefined || isValidWordQueue(value.wordQueue, value.words)) &&
         (value.startTeam === "red" || value.startTeam === "blue") &&
+        (value.interactionMode === undefined || Object.values(INTERACTION_MODES).includes(value.interactionMode)) &&
+        (value.solutionCardNumber === undefined || Number.isInteger(value.solutionCardNumber)) &&
+        (value.solutionLayout === undefined || isValidSolutionLayout(value.solutionLayout)) &&
         typeof value.locked === "boolean" &&
         value.words.every((word) => typeof word === "string" && word.length > 0) &&
         value.marks.every((marker) => marker === null || ["red", "blue", "neutral", "black"].includes(marker))
@@ -1758,6 +1948,9 @@
         wordQueue: state.wordQueue,
         cardVariant: state.cardVariant,
         startTeam: state.startTeam,
+        interactionMode: state.interactionMode,
+        solutionCardNumber: state.solutionCardNumber,
+        solutionLayout: state.solutionLayout,
         locked: state.locked,
         keepAwake: state.keepAwake,
         history: state.history
@@ -1775,6 +1968,12 @@
       return Array.isArray(value) &&
         new Set(value).size === value.length &&
         value.every((word) => WORD_LOOKUP.has(word) && !currentSet.has(word));
+    }
+
+    function isValidSolutionLayout(value) {
+      return Array.isArray(value) &&
+        value.length === 25 &&
+        value.every((marker) => ["red", "blue", "neutral", "black"].includes(marker));
     }
 
     function normalizeWordQueue(value, currentWords = []) {
@@ -1822,7 +2021,67 @@
       return MARKER_CYCLE[(currentIndex + 1) % MARKER_CYCLE.length];
     }
 
+    function normalizeSolutionCardNumber(value) {
+      if (!Number.isFinite(value)) {
+        return 1;
+      }
+      return Math.min(TOTAL_SOLUTION_CARDS, Math.max(1, Math.floor(value)));
+    }
+
+    function createSeededRng(seed) {
+      let value = seed >>> 0;
+      return () => {
+        value = (value * 1664525 + 1013904223) >>> 0;
+        return value / 4294967296;
+      };
+    }
+
+    function shuffleWithRandom(values, random) {
+      const next = [...values];
+      for (let index = next.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(random() * (index + 1));
+        const temp = next[index];
+        next[index] = next[swapIndex];
+        next[swapIndex] = temp;
+      }
+      return next;
+    }
+
+    function buildSolutionCard(cardNumber) {
+      const normalized = normalizeSolutionCardNumber(cardNumber);
+      const random = createSeededRng(9001 + normalized * 2654435761);
+      const startTeam = random() < 0.5 ? "red" : "blue";
+      const targets = startTeam === "red"
+        ? { red: 9, blue: 8 }
+        : { red: 8, blue: 9 };
+      const markerBag = [
+        ...Array(targets.red).fill("red"),
+        ...Array(targets.blue).fill("blue"),
+        ...Array(7).fill("neutral"),
+        "black"
+      ];
+
+      return {
+        cardNumber: normalized,
+        startTeam,
+        layout: shuffleWithRandom(markerBag, random)
+      };
+    }
+
+    function applySolutionCard(cardNumber, resetMarks = true) {
+      const solution = buildSolutionCard(cardNumber);
+      state.solutionCardNumber = solution.cardNumber;
+      state.solutionLayout = solution.layout;
+      state.startTeam = solution.startTeam;
+      if (resetMarks) {
+        state.marks = Array(25).fill(null);
+      }
+    }
+
     function defaultStatusText() {
+      if (state.interactionMode === INTERACTION_MODES.solution) {
+        return `Karten-Code ${state.solutionCardNumber}: Tippe auf ein Wort zum Aufdecken.${state.locked ? " Spielfeld ist gesperrt." : ""}`;
+      }
       const action = "Tippe auf ein Wort: Blau, Rot, Neutral, Schwarzer Peter, dann wieder leer.";
       const safety = state.locked ? " Spielfeld ist gesperrt." : "";
       return action + safety;
