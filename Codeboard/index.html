@@ -36,6 +36,10 @@
       margin: 0;
       min-height: 100vh;
       font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+      --board-gap: clamp(6px, 0.75vmin, 12px);
+      --board-cell: 140px;
+      --word-size: clamp(0.64rem, 1.25vw, 1.12rem);
+      --word-box-height: 2.4rem;
       color: var(--ink);
       background:
         radial-gradient(circle at top left, rgba(255, 248, 232, 0.9), transparent 26%),
@@ -342,12 +346,16 @@
         linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(229, 213, 190, 0.5)),
         rgba(236, 224, 208, 0.85);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      display: grid;
+      place-items: center;
     }
 
     .board {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(5, var(--board-cell));
+      grid-auto-rows: calc(var(--board-cell) * 0.74);
+      justify-content: center;
+      gap: var(--board-gap);
     }
 
     .board.locked .card {
@@ -356,7 +364,7 @@
 
     .card {
       position: relative;
-      aspect-ratio: 1 / 0.74;
+      height: 100%;
       border: 0;
       border-radius: 20px;
       padding: 0;
@@ -412,7 +420,7 @@
       justify-content: center;
       width: 100%;
       min-height: 0;
-      font-size: clamp(0.92rem, 1.9vw, 1.64rem);
+      font-size: var(--word-size);
       line-height: 1;
       font-weight: 900;
       letter-spacing: 0.08em;
@@ -439,8 +447,8 @@
       align-items: center;
       justify-content: center;
       max-width: 100%;
-      min-width: min(76%, 10.5rem);
-      min-height: 3.5rem;
+      min-width: 76%;
+      min-height: var(--word-box-height);
       padding: 10px 14px;
       border-radius: 16px;
       border: 1px solid rgba(92, 61, 36, 0.16);
@@ -1078,10 +1086,6 @@
         text-align: left;
       }
 
-      .board {
-        gap: 8px;
-      }
-
       .board-wrap {
         padding: 10px;
       }
@@ -1100,7 +1104,7 @@
       }
 
       .word-row {
-        font-size: clamp(0.58rem, 2.6vw, 0.86rem);
+        font-size: var(--word-size);
         letter-spacing: 0.05em;
       }
 
@@ -1111,7 +1115,7 @@
 
       .word-box {
         min-width: 82%;
-        min-height: 2.65rem;
+        min-height: var(--word-box-height);
         padding: 8px 8px;
         border-radius: 12px;
       }
@@ -1150,6 +1154,35 @@
       }
     }
 
+    body.fullscreen-focus .app-shell {
+      width: 100vw;
+      padding: 0;
+    }
+
+    body.fullscreen-focus .hero,
+    body.fullscreen-focus .board-toolbar,
+    body.fullscreen-focus .quick-marker-bar,
+    body.fullscreen-focus .lock-banner {
+      display: none;
+    }
+
+    body.fullscreen-focus .layout {
+      margin-top: 0;
+    }
+
+    body.fullscreen-focus .board-panel {
+      min-height: 100dvh;
+      border-radius: 0;
+      padding: 6px;
+      background: rgba(255, 249, 240, 0.86);
+    }
+
+    body.fullscreen-focus .board-wrap {
+      height: calc(100dvh - 12px);
+      border-radius: 16px;
+      padding: 8px;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
@@ -1185,7 +1218,7 @@
         </div>
         <div id="quickMarkerBar" class="quick-marker-bar is-static" aria-label="Markier-Reihenfolge"></div>
         <div id="lockBanner" class="lock-banner" aria-live="polite">Spielfeld gesperrt. Zum Entsperren den Knopf rechts nutzen.</div>
-        <div class="board-wrap">
+        <div id="boardWrap" class="board-wrap">
           <div id="board" class="board" role="grid" aria-label="Codenames Wortfeld"></div>
         </div>
       </section>
@@ -1428,6 +1461,7 @@
     let noticeTimeout = null;
 
     const board = document.getElementById("board");
+    const boardWrap = document.getElementById("boardWrap");
     const statStrip = document.getElementById("statStrip");
     const statusLine = document.getElementById("statusLine");
     const quickMarkerBar = document.getElementById("quickMarkerBar");
@@ -1598,6 +1632,8 @@
         render();
         void syncWakeLockState();
       });
+      window.addEventListener("resize", updateBoardSizing);
+      window.visualViewport?.addEventListener("resize", updateBoardSizing);
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && settingsOpen) {
           setSettingsOpen(false);
@@ -1626,11 +1662,36 @@
       wakeBtn.textContent = state.keepAwake ? "Wachhalten aus" : "Bildschirm wachhalten";
       settingsBtn.textContent = settingsOpen ? "Panel schliessen" : "Einstellungen";
       fullscreenBtn.textContent = document.fullscreenElement ? "Vollbild beenden" : "Vollbild";
+      document.body.classList.toggle("fullscreen-focus", Boolean(document.fullscreenElement));
       undoBtn.disabled = state.history.length === 0;
       deviceLine.textContent = wakeLockLine();
       panelBackdrop.hidden = !settingsOpen;
       document.body.classList.toggle("settings-open", settingsOpen);
       syncVariantButtonState();
+      updateBoardSizing();
+    }
+
+    function updateBoardSizing() {
+      const gap = parseFloat(getComputedStyle(document.body).getPropertyValue("--board-gap")) || 8;
+      const ratio = 0.74;
+      const boardWidth = boardWrap.clientWidth;
+      const boardHeight = boardWrap.clientHeight;
+      if (!boardWidth) {
+        return;
+      }
+
+      const byWidth = (boardWidth - gap * 4) / 5;
+      const byHeight = boardHeight
+        ? (boardHeight - gap * 4) / (5 * ratio)
+        : byWidth;
+      const cellSize = Math.max(42, Math.floor(Math.min(byWidth, byHeight)));
+
+      const wordSize = Math.max(8.8, Math.min(20, cellSize * 0.16));
+      const boxHeight = Math.max(18, Math.min(58, cellSize * 0.3));
+
+      document.body.style.setProperty("--board-cell", `${cellSize}px`);
+      document.body.style.setProperty("--word-size", `${wordSize}px`);
+      document.body.style.setProperty("--word-box-height", `${boxHeight}px`);
     }
 
     function setSettingsOpen(nextOpen) {
