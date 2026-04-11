@@ -902,12 +902,18 @@
     .segment button,
     .variant-grid button,
     .marker-grid button,
-    .action-grid button {
+    .action-grid button,
+    .scale-controls button {
       min-height: 56px;
       background: rgba(255, 255, 255, 0.88);
       color: var(--ink);
       font-weight: 800;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .scale-controls .button-title {
+      font-size: 1.36rem;
+      line-height: 1;
     }
 
     .segment button.is-active,
@@ -972,6 +978,30 @@
       font-weight: 600;
       letter-spacing: 0;
       text-transform: none;
+    }
+
+    .scale-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .scale-value {
+      min-width: 74px;
+      min-height: 56px;
+      padding: 12px 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      border: 1px solid rgba(82, 53, 33, 0.12);
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--ink);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
     }
 
     .meta-grid {
@@ -1291,6 +1321,17 @@
             Fuenf Kartenvarianten setzen unterschiedliche Ideen aus der Recherche um: mehr Kontrast,
             mehr Abstand zur Mitte, Orientierungscues oder farbliche Trennung der Seiten.
           </p>
+          <div class="scale-controls" aria-label="Kartengroesse und Schriftgroesse">
+            <button id="scaleDownBtn" type="button" aria-label="Karten und Schrift verkleinern">
+              <span class="button-line">Groesse</span>
+              <span class="button-title">-</span>
+            </button>
+            <span id="scaleValue" class="scale-value" aria-live="polite">100%</span>
+            <button id="scaleUpBtn" type="button" aria-label="Karten und Schrift vergroessern">
+              <span class="button-line">Groesse</span>
+              <span class="button-title">+</span>
+            </button>
+          </div>
           <div id="variantGrid" class="variant-grid" aria-label="Kartenvarianten"></div>
         </section>
 
@@ -1358,6 +1399,9 @@
     const STORAGE_KEY = "codeboard-state-v2";
     const HISTORY_LIMIT = 60;
     const TOTAL_SOLUTION_CARDS = 1000;
+    const BOARD_SCALE_MIN = 0.8;
+    const BOARD_SCALE_MAX = 1.2;
+    const BOARD_SCALE_STEP = 0.05;
 
     const MARKERS = {
       red: {
@@ -1511,6 +1555,9 @@
     const solutionModeBtn = document.getElementById("solutionModeBtn");
     const solutionControls = document.getElementById("solutionControls");
     const solutionCardInput = document.getElementById("solutionCardInput");
+    const scaleDownBtn = document.getElementById("scaleDownBtn");
+    const scaleUpBtn = document.getElementById("scaleUpBtn");
+    const scaleValue = document.getElementById("scaleValue");
 
     let settingsOpen = false;
     let boardSizingFrame = 0;
@@ -1578,6 +1625,12 @@
       solutionModeBtn.addEventListener("click", () => setInteractionMode(INTERACTION_MODES.solution));
       solutionCardInput.addEventListener("change", () => {
         setSolutionCardNumber(solutionCardInput.value);
+      });
+      scaleDownBtn.addEventListener("click", () => {
+        setBoardScale(state.boardScale - BOARD_SCALE_STEP);
+      });
+      scaleUpBtn.addEventListener("click", () => {
+        setBoardScale(state.boardScale + BOARD_SCALE_STEP);
       });
 
       newRoundBtn.addEventListener("click", () => {
@@ -1690,6 +1743,7 @@
       solutionModeBtn.classList.toggle("is-active", state.interactionMode === INTERACTION_MODES.solution);
       solutionControls.hidden = state.interactionMode !== INTERACTION_MODES.solution;
       solutionCardInput.value = String(state.solutionCardNumber);
+      updateScaleControls();
       lockBtn.textContent = state.locked ? "Feld entsperren" : "Feld sperren";
       wakeBtn.textContent = state.keepAwake ? "Wachhalten aus" : "Bildschirm wachhalten";
       settingsBtn.textContent = settingsOpen ? "Panel schliessen" : "Einstellungen";
@@ -1739,23 +1793,25 @@
       const byHeight = boardHeight
         ? (boardHeight - gap * 4) / (5 * ratio)
         : byWidth;
-      const minimumCellSize = viewportWidth < 520 || viewportHeight < 520 ? 34 : 42;
-      const rawCellSize = Math.min(byWidth, byHeight);
+      const boardScale = normalizeBoardScale(state.boardScale);
+      const baseMinimumCellSize = viewportWidth < 520 || viewportHeight < 520 ? 34 : 42;
+      const minimumCellSize = baseMinimumCellSize * boardScale;
+      const rawCellSize = Math.min(byWidth, byHeight) * boardScale;
       const cellSize = Math.max(minimumCellSize, Math.floor(Number.isFinite(rawCellSize) ? rawCellSize : byWidth));
       const rowHeight = cellSize * ratio;
-      const cardPadY = clampNumber(rowHeight * 0.075, 3, 10);
-      const cardPadX = clampNumber(cellSize * 0.09, 5, 18);
-      const dividerHeight = clampNumber(rowHeight * 0.035, 2, 5);
-      const availableLabelHeight = Math.max(8, (rowHeight - cardPadY * 2 - dividerHeight) / 2);
-      const boxHeight = clampNumber(availableLabelHeight * 0.94, 8, 42);
-      const wordSize = clampNumber(Math.min(cellSize * 0.14, boxHeight * 0.62), 5.2, 18);
-      const wordBoxPadX = clampNumber(cellSize * 0.055, 3, 12);
-      const wordBoxPadY = clampNumber(boxHeight * 0.14, 1, 8);
-      const wayfinderPadLeft = clampNumber(cellSize * 0.18, 15, 34);
-      const wayfinderDotLeft = clampNumber(cellSize * 0.085, 5, 12);
-      const wayfinderDotSize = clampNumber(cellSize * 0.075, 5, 10);
-      const overlayWordSize = clampNumber(Math.min(cellSize * 0.1, rowHeight * 0.18), 6.2, 15);
-      const overlayBadgeSize = clampNumber(Math.min(cellSize * 0.12, rowHeight * 0.22), 7, 16);
+      const cardPadY = clampNumber(rowHeight * 0.075, 3 * boardScale, 10 * boardScale);
+      const cardPadX = clampNumber(cellSize * 0.09, 5 * boardScale, 18 * boardScale);
+      const dividerHeight = clampNumber(rowHeight * 0.035, 2 * boardScale, 5 * boardScale);
+      const availableLabelHeight = Math.max(8 * boardScale, (rowHeight - cardPadY * 2 - dividerHeight) / 2);
+      const boxHeight = clampNumber(availableLabelHeight * 0.94, 8 * boardScale, 42 * boardScale);
+      const wordSize = clampNumber(Math.min(cellSize * 0.14, boxHeight * 0.62), 5.2 * boardScale, 18 * boardScale);
+      const wordBoxPadX = clampNumber(cellSize * 0.055, 3 * boardScale, 12 * boardScale);
+      const wordBoxPadY = clampNumber(boxHeight * 0.14, 1 * boardScale, 8 * boardScale);
+      const wayfinderPadLeft = clampNumber(cellSize * 0.18, 15 * boardScale, 34 * boardScale);
+      const wayfinderDotLeft = clampNumber(cellSize * 0.085, 5 * boardScale, 12 * boardScale);
+      const wayfinderDotSize = clampNumber(cellSize * 0.075, 5 * boardScale, 10 * boardScale);
+      const overlayWordSize = clampNumber(Math.min(cellSize * 0.1, rowHeight * 0.18), 6.2 * boardScale, 15 * boardScale);
+      const overlayBadgeSize = clampNumber(Math.min(cellSize * 0.12, rowHeight * 0.22), 7 * boardScale, 16 * boardScale);
 
       setBodyPixels("--board-cell", cellSize);
       setBodyPixels("--word-size", wordSize);
@@ -1786,9 +1842,10 @@
     }
 
     function fitCardText(wordSize, overlayWordSize, overlayBadgeSize, cellSize) {
-      const minWordSize = clampNumber(cellSize * 0.07, 5.2, Math.min(8.5, wordSize));
-      const minOverlaySize = clampNumber(cellSize * 0.06, 5.2, Math.min(8, overlayWordSize));
-      const minBadgeSize = clampNumber(cellSize * 0.07, 5.8, Math.min(8.5, overlayBadgeSize));
+      const boardScale = normalizeBoardScale(state.boardScale);
+      const minWordSize = clampNumber(cellSize * 0.07, 5.2 * boardScale, Math.min(8.5 * boardScale, wordSize));
+      const minOverlaySize = clampNumber(cellSize * 0.06, 5.2 * boardScale, Math.min(8 * boardScale, overlayWordSize));
+      const minBadgeSize = clampNumber(cellSize * 0.07, 5.8 * boardScale, Math.min(8.5 * boardScale, overlayBadgeSize));
 
       board.querySelectorAll(".card").forEach((card) => {
         fitElementsTogether(card.querySelectorAll(".word-box"), wordSize, minWordSize);
@@ -1825,6 +1882,28 @@
     function setSettingsOpen(nextOpen) {
       settingsOpen = nextOpen;
       render();
+    }
+
+    function setBoardScale(nextScale) {
+      const normalized = normalizeBoardScale(nextScale);
+      if (normalized === state.boardScale) {
+        return;
+      }
+
+      state.boardScale = normalized;
+      saveState();
+      flashNotice(`Groesse: ${formatScale(state.boardScale)}.`);
+    }
+
+    function updateScaleControls() {
+      const scale = normalizeBoardScale(state.boardScale);
+      scaleValue.textContent = formatScale(scale);
+      scaleDownBtn.disabled = scale <= BOARD_SCALE_MIN;
+      scaleUpBtn.disabled = scale >= BOARD_SCALE_MAX;
+    }
+
+    function formatScale(scale) {
+      return `${Math.round(normalizeBoardScale(scale) * 100)}%`;
     }
 
     function renderCycleLegend() {
@@ -2060,6 +2139,7 @@
           cardVariant: Object.prototype.hasOwnProperty.call(CARD_VARIANTS, parsed.cardVariant)
             ? parsed.cardVariant
             : "contrast",
+          boardScale: normalizeBoardScale(parsed.boardScale),
           startTeam: parsed.startTeam,
           interactionMode: Object.values(INTERACTION_MODES).includes(parsed.interactionMode)
             ? parsed.interactionMode
@@ -2095,6 +2175,7 @@
         marks: Array(25).fill(null),
         wordQueue: initialRound.wordQueue,
         cardVariant: "contrast",
+        boardScale: 1,
         startTeam: "red",
         interactionMode: INTERACTION_MODES.manual,
         solutionCardNumber: 1,
@@ -2136,6 +2217,7 @@
         marks: state.marks,
         wordQueue: state.wordQueue,
         cardVariant: state.cardVariant,
+        boardScale: state.boardScale,
         startTeam: state.startTeam,
         interactionMode: state.interactionMode,
         solutionCardNumber: state.solutionCardNumber,
@@ -2215,6 +2297,16 @@
         return 1;
       }
       return Math.min(TOTAL_SOLUTION_CARDS, Math.max(1, Math.floor(value)));
+    }
+
+    function normalizeBoardScale(value) {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed)) {
+        return 1;
+      }
+
+      const stepped = Math.round(parsed / BOARD_SCALE_STEP) * BOARD_SCALE_STEP;
+      return Number(clampNumber(stepped, BOARD_SCALE_MIN, BOARD_SCALE_MAX).toFixed(2));
     }
 
     function createSeededRng(seed) {

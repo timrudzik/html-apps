@@ -11,9 +11,11 @@
     .head{display:flex;flex-wrap:wrap;gap:10px;align-items:end;justify-content:space-between;margin-bottom:12px}
     h1{margin:0;font-size:clamp(1.4rem,3vw,2.2rem)}
     .controls{display:flex;gap:8px;flex-wrap:wrap}
+    .scale-value{min-height:44px;min-width:62px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--line);padding:8px 10px;background:#fff;font-weight:800}
     input,button{font:inherit;min-height:44px;border-radius:12px;border:1px solid var(--line);padding:8px 12px}
     input{width:130px;background:#fff}
     button{cursor:pointer;background:#fff7ea;font-weight:700}
+    button:disabled{opacity:.45;cursor:default}
     .meta{padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:var(--shadow);display:flex;gap:12px;flex-wrap:wrap}
     .badge{padding:6px 10px;border-radius:999px;background:#efe4d2;border:1px solid var(--line);font-weight:700}
     .board{margin-top:12px;display:grid;grid-template-columns:repeat(5,var(--cell));grid-auto-rows:calc(var(--cell) * .7);justify-content:center;align-content:center;gap:var(--gap);padding:10px;border:1px solid var(--line);border-radius:18px;background:var(--paper);box-shadow:var(--shadow);flex:1}
@@ -24,7 +26,7 @@
       .app{padding:8px 10px 10px}
       .head{margin-bottom:8px;gap:8px}
       .meta{padding:8px 10px;gap:8px}
-      input,button{min-height:36px;padding:6px 10px}
+      input,button,.scale-value{min-height:36px;padding:6px 10px}
       .board{margin-top:8px;padding:8px}
     }
     .red{background:linear-gradient(180deg,#da8c7b,#b44833)} .blue{background:linear-gradient(180deg,#8db7da,#346794)} .neutral{background:linear-gradient(180deg,#ead6b8,#c2a076)} .black{background:linear-gradient(180deg,#666,#1f1f1f)}
@@ -38,6 +40,9 @@
       </div>
       <div class="controls">
         <input id="cardInput" type="number" min="1" max="1000" value="1" inputmode="numeric">
+        <button id="scaleDownBtn" type="button" aria-label="Loesungskarte verkleinern">-</button>
+        <span id="scaleValue" class="scale-value" aria-live="polite">100%</span>
+        <button id="scaleUpBtn" type="button" aria-label="Loesungskarte vergroessern">+</button>
         <button id="randomBtn" type="button">Zufall</button>
         <button id="fullscreenBtn" type="button">Vollbild</button>
       </div>
@@ -51,6 +56,10 @@
   </main>
   <script>
     const TOTAL_SOLUTION_CARDS = 1000;
+    const CARD_SCALE_STORAGE_KEY = 'solutioncards-card-scale-v1';
+    const CARD_SCALE_MIN = 0.8;
+    const CARD_SCALE_MAX = 1.2;
+    const CARD_SCALE_STEP = 0.05;
 
     const board = document.getElementById('board');
     const cardInput = document.getElementById('cardInput');
@@ -58,6 +67,11 @@
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const numberBadge = document.getElementById('numberBadge');
     const teamBadge = document.getElementById('teamBadge');
+    const scaleDownBtn = document.getElementById('scaleDownBtn');
+    const scaleUpBtn = document.getElementById('scaleUpBtn');
+    const scaleValue = document.getElementById('scaleValue');
+
+    let cardScale = loadCardScale();
 
     function normalizeSolutionCardNumber(value) {
       if (!Number.isFinite(value)) return 1;
@@ -105,6 +119,7 @@
       board.innerHTML = solution.layout.map((marker) => `<div class="cell ${marker}"></div>`).join('');
       fullscreenBtn.textContent = document.fullscreenElement ? 'Vollbild aus' : 'Vollbild';
       document.body.classList.toggle('fullscreen', Boolean(document.fullscreenElement));
+      updateScaleControls();
       fitBoard();
     }
 
@@ -113,6 +128,8 @@
       const next = 1 + Math.floor(Math.random() * TOTAL_SOLUTION_CARDS);
       render(next);
     });
+    scaleDownBtn.addEventListener('click', () => setCardScale(cardScale - CARD_SCALE_STEP));
+    scaleUpBtn.addEventListener('click', () => setCardScale(cardScale + CARD_SCALE_STEP));
     fullscreenBtn.addEventListener('click', async () => {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
@@ -123,6 +140,53 @@
     document.addEventListener('fullscreenchange', () => render(Number.parseInt(cardInput.value, 10)));
     window.addEventListener('resize', fitBoard);
     window.visualViewport?.addEventListener('resize', fitBoard);
+
+    function setCardScale(nextScale) {
+      const normalized = normalizeCardScale(nextScale);
+      if (normalized === cardScale) return;
+      cardScale = normalized;
+      saveCardScale();
+      applyCardScale();
+      fitBoard();
+    }
+
+    function applyCardScale() {
+      document.documentElement.style.fontSize = `${(cardScale * 16).toFixed(1)}px`;
+      updateScaleControls();
+    }
+
+    function updateScaleControls() {
+      scaleValue.textContent = formatScale(cardScale);
+      scaleDownBtn.disabled = cardScale <= CARD_SCALE_MIN;
+      scaleUpBtn.disabled = cardScale >= CARD_SCALE_MAX;
+    }
+
+    function formatScale(scale) {
+      return `${Math.round(normalizeCardScale(scale) * 100)}%`;
+    }
+
+    function normalizeCardScale(value) {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed)) return 1;
+      const stepped = Math.round(parsed / CARD_SCALE_STEP) * CARD_SCALE_STEP;
+      return Number(Math.min(CARD_SCALE_MAX, Math.max(CARD_SCALE_MIN, stepped)).toFixed(2));
+    }
+
+    function loadCardScale() {
+      try {
+        return normalizeCardScale(Number.parseFloat(window.localStorage.getItem(CARD_SCALE_STORAGE_KEY)));
+      } catch (error) {
+        return 1;
+      }
+    }
+
+    function saveCardScale() {
+      try {
+        window.localStorage.setItem(CARD_SCALE_STORAGE_KEY, String(cardScale));
+      } catch (error) {
+        // Die Karte bleibt nutzbar, auch wenn Storage blockiert ist.
+      }
+    }
 
     function fitBoard() {
       const app = document.querySelector('.app');
@@ -143,11 +207,12 @@
       const byWidth = (availableWidth - 4 * gap) / 5;
       const byHeight = (availableHeight - 4 * gap) / (5 * 0.7);
       const isSmallLandscape = window.matchMedia('(orientation: landscape) and (max-height: 520px)').matches;
-      const minCell = isSmallLandscape ? 24 : 34;
-      const cell = Math.max(minCell, Math.floor(Math.min(byWidth, byHeight)));
+      const minCell = (isSmallLandscape ? 24 : 34) * cardScale;
+      const cell = Math.max(minCell, Math.floor(Math.min(byWidth, byHeight) * cardScale));
       document.documentElement.style.setProperty('--cell', `${cell}px`);
     }
 
+    applyCardScale();
     render(1);
   </script>
 </body>
