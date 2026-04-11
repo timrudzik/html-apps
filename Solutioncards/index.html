@@ -72,6 +72,7 @@
     const scaleValue = document.getElementById('scaleValue');
 
     let cardScale = loadCardScale();
+    let stableViewportSize = null;
 
     function normalizeSolutionCardNumber(value) {
       if (!Number.isFinite(value)) return 1;
@@ -137,9 +138,11 @@
         await document.documentElement.requestFullscreen();
       }
     });
-    document.addEventListener('fullscreenchange', () => render(Number.parseInt(cardInput.value, 10)));
+    document.addEventListener('fullscreenchange', () => {
+      stableViewportSize = null;
+      render(Number.parseInt(cardInput.value, 10));
+    });
     window.addEventListener('resize', fitBoard);
-    window.visualViewport?.addEventListener('resize', fitBoard);
 
     function setCardScale(nextScale) {
       const normalized = normalizeCardScale(nextScale);
@@ -188,6 +191,22 @@
       }
     }
 
+    function readStableViewportSize() {
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth || board.clientWidth;
+      const viewportHeight = document.documentElement.clientHeight || window.innerHeight || board.clientHeight;
+      const fullscreen = Boolean(document.fullscreenElement);
+      const widthChanged = !stableViewportSize || Math.abs(viewportWidth - stableViewportSize.width) > 1;
+
+      if (!stableViewportSize || widthChanged || fullscreen) {
+        stableViewportSize = { width: viewportWidth, height: viewportHeight };
+      }
+
+      return {
+        viewportWidth,
+        viewportHeight: fullscreen ? viewportHeight : stableViewportSize.height
+      };
+    }
+
     function fitBoard() {
       const app = document.querySelector('.app');
       const head = document.querySelector('.head');
@@ -195,8 +214,7 @@
       const appStyles = getComputedStyle(app);
       const padY = (parseFloat(appStyles.paddingTop) || 0) + (parseFloat(appStyles.paddingBottom) || 0);
       const padX = (parseFloat(appStyles.paddingLeft) || 0) + (parseFloat(appStyles.paddingRight) || 0);
-      const viewportHeight = window.visualViewport?.height || window.innerHeight;
-      const viewportWidth = window.visualViewport?.width || window.innerWidth;
+      const { viewportWidth, viewportHeight } = readStableViewportSize();
       const boardStyles = getComputedStyle(board);
       const boardPadX = (parseFloat(boardStyles.paddingLeft) || 0) + (parseFloat(boardStyles.paddingRight) || 0);
       const boardBorderX = (parseFloat(boardStyles.borderLeftWidth) || 0) + (parseFloat(boardStyles.borderRightWidth) || 0);

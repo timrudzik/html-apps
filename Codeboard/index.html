@@ -1530,6 +1530,7 @@
     let mediaWakeTimer = null;
     let uiNotice = "";
     let noticeTimeout = null;
+    let stableSizingViewport = null;
 
     const board = document.getElementById("board");
     const boardWrap = document.getElementById("boardWrap");
@@ -1714,11 +1715,11 @@
       });
 
       document.addEventListener("fullscreenchange", () => {
+        stableSizingViewport = null;
         render();
         void syncWakeLockState();
       });
       window.addEventListener("resize", scheduleBoardSizing);
-      window.visualViewport?.addEventListener("resize", scheduleBoardSizing);
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && settingsOpen) {
           setSettingsOpen(false);
@@ -1779,10 +1780,8 @@
         return;
       }
 
-      const viewport = window.visualViewport;
-      const viewportWidth = viewport?.width || window.innerWidth || boardWrap.clientWidth;
-      const viewportHeight = viewport?.height || window.innerHeight || boardWrap.clientHeight;
-      const wrapTop = Math.max(0, boardWrap.getBoundingClientRect().top);
+      const { viewportWidth, viewportHeight } = readStableViewportSize();
+      const wrapTop = Math.max(0, boardWrap.getBoundingClientRect().top + window.scrollY);
       const viewportHeightBudget = Math.max(0, viewportHeight - wrapTop - 12 - blockPadding);
       const fullscreenHeightBudget = document.fullscreenElement
         ? Math.max(0, boardWrap.clientHeight - blockPadding)
@@ -1831,6 +1830,22 @@
 
     function cssPixels(style, property) {
       return parseFloat(style.getPropertyValue(property)) || 0;
+    }
+
+    function readStableViewportSize() {
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth || boardWrap.clientWidth;
+      const viewportHeight = document.documentElement.clientHeight || window.innerHeight || boardWrap.clientHeight;
+      const fullscreen = Boolean(document.fullscreenElement);
+      const widthChanged = !stableSizingViewport || Math.abs(viewportWidth - stableSizingViewport.width) > 1;
+
+      if (!stableSizingViewport || widthChanged || fullscreen) {
+        stableSizingViewport = { width: viewportWidth, height: viewportHeight };
+      }
+
+      return {
+        viewportWidth,
+        viewportHeight: fullscreen ? viewportHeight : stableSizingViewport.height
+      };
     }
 
     function clampNumber(value, min, max) {
