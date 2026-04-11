@@ -43,9 +43,19 @@
       font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
       font-size: clamp(11px, 1.2vw + 0.45rem, 18px);
       --board-gap: clamp(5px, 0.75vmin, 12px);
-      --board-cell: clamp(58px, min(18vw, 18dvh), 140px);
-      --word-size: clamp(0.4rem, calc(var(--board-cell) * 0.14), 1.12rem);
-      --word-box-height: clamp(1rem, calc(var(--board-cell) * 0.23), 2.4rem);
+      --board-cell: clamp(42px, min(calc((100vw - 88px) / 5), 18dvh), 140px);
+      --word-size: clamp(0.34rem, calc(var(--board-cell) * 0.13), 1.08rem);
+      --word-box-height: clamp(0.5rem, calc(var(--board-cell) * 0.2), 2.4rem);
+      --card-pad-x: clamp(5px, calc(var(--board-cell) * 0.09), 18px);
+      --card-pad-y: clamp(3px, calc(var(--board-cell) * 0.06), 10px);
+      --word-box-pad-x: clamp(3px, calc(var(--board-cell) * 0.055), 12px);
+      --word-box-pad-y: clamp(1px, calc(var(--board-cell) * 0.025), 8px);
+      --word-divider-height: clamp(2px, calc(var(--board-cell) * 0.03), 5px);
+      --wayfinder-pad-left: clamp(15px, calc(var(--board-cell) * 0.18), 34px);
+      --wayfinder-dot-left: clamp(5px, calc(var(--board-cell) * 0.085), 12px);
+      --wayfinder-dot-size: clamp(5px, calc(var(--board-cell) * 0.075), 10px);
+      --overlay-word-size: clamp(0.42rem, calc(var(--board-cell) * 0.1), 0.95rem);
+      --overlay-badge-size: clamp(0.46rem, calc(var(--board-cell) * 0.12), 1rem);
       color: var(--ink);
       background:
         radial-gradient(circle at top left, rgba(255, 248, 232, 0.9), transparent 26%),
@@ -390,7 +400,7 @@
     .card::before {
       content: "";
       position: absolute;
-      inset: 10px;
+      inset: clamp(4px, calc(var(--board-cell) * 0.07), 10px);
       border-radius: 14px;
       border: 1px solid rgba(82, 53, 33, 0.08);
       pointer-events: none;
@@ -414,7 +424,7 @@
     .card-face {
       position: absolute;
       inset: 0;
-      padding: 12px 18px;
+      padding: var(--card-pad-y) var(--card-pad-x);
       display: grid;
       grid-template-rows: auto 1fr auto;
       align-items: stretch;
@@ -429,7 +439,7 @@
       font-size: var(--word-size);
       line-height: 1;
       font-weight: 900;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       text-transform: uppercase;
       text-align: center;
       text-wrap: balance;
@@ -455,9 +465,11 @@
       max-width: 100%;
       min-width: 76%;
       min-height: var(--word-box-height);
-      padding: 10px 14px;
+      padding: var(--word-box-pad-y) var(--word-box-pad-x);
       border-radius: 16px;
       border: 1px solid rgba(92, 61, 36, 0.16);
+      white-space: nowrap;
+      overflow: hidden;
       background:
         linear-gradient(180deg, rgba(244, 230, 202, 0.68), rgba(216, 188, 145, 0.8)),
         rgba(239, 222, 195, 0.7);
@@ -489,13 +501,13 @@
     }
 
     .board[data-card-variant="contrast"] .word-row {
-      letter-spacing: 0.09em;
+      letter-spacing: 0;
       text-shadow: none;
     }
 
     .board[data-card-variant="contrast"] .word-box {
       min-width: min(82%, 11rem);
-      min-height: 3.35rem;
+      min-height: var(--word-box-height);
       background: #fffaf1;
       border: 2px solid rgba(36, 26, 18, 0.18);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
@@ -508,14 +520,14 @@
 
     .board[data-card-variant="contrast"] .word-divider {
       width: 72%;
-      height: 5px;
+      height: var(--word-divider-height);
       background: rgba(78, 51, 31, 0.42);
       box-shadow: none;
       opacity: 1;
     }
 
     .board[data-card-variant="rails"] .card-face {
-      padding-inline: 16px;
+      padding-inline: var(--card-pad-x);
     }
 
     .board[data-card-variant="rails"] .word-row {
@@ -524,7 +536,7 @@
 
     .board[data-card-variant="rails"] .word-box {
       min-width: min(68%, 9rem);
-      min-height: 3.1rem;
+      min-height: var(--word-box-height);
       border-radius: 14px;
       background:
         linear-gradient(180deg, rgba(248, 239, 223, 0.92), rgba(228, 205, 171, 0.9)),
@@ -549,7 +561,7 @@
 
     .board[data-card-variant="rails"] .word-divider {
       width: 54%;
-      height: 3px;
+      height: var(--word-divider-height);
       box-shadow: none;
       opacity: 0.88;
     }
@@ -560,7 +572,7 @@
 
     .board[data-card-variant="wayfinder"] .word-box {
       min-width: min(80%, 11rem);
-      padding: 10px 14px 12px 34px;
+      padding: var(--word-box-pad-y) var(--word-box-pad-x) var(--word-box-pad-y) var(--wayfinder-pad-left);
       background: #fff8ee;
       border-color: rgba(78, 55, 34, 0.16);
     }
@@ -573,19 +585,19 @@
     }
 
     .board[data-card-variant="wayfinder"] .word-box::before {
-      left: 12px;
+      left: var(--wayfinder-dot-left);
       top: 50%;
-      width: 10px;
-      height: 10px;
+      width: var(--wayfinder-dot-size);
+      height: var(--wayfinder-dot-size);
       border-radius: 999px;
       transform: translateY(-50%);
     }
 
     .board[data-card-variant="wayfinder"] .word-box::after {
-      left: 28px;
-      right: 14px;
-      bottom: 8px;
-      height: 3px;
+      left: calc(var(--wayfinder-pad-left) - clamp(4px, calc(var(--board-cell) * 0.04), 8px));
+      right: var(--word-box-pad-x);
+      bottom: var(--word-box-pad-y);
+      height: clamp(2px, calc(var(--board-cell) * 0.025), 3px);
       border-radius: 999px;
     }
 
@@ -653,7 +665,7 @@
 
     .word-divider {
       width: 68%;
-      height: 4px;
+      height: var(--word-divider-height);
       border-radius: 999px;
       justify-self: center;
       align-self: center;
@@ -661,7 +673,7 @@
         linear-gradient(90deg, rgba(97, 67, 43, 0), rgba(97, 67, 43, 0.28), rgba(97, 67, 43, 0.42), rgba(97, 67, 43, 0.28), rgba(97, 67, 43, 0));
       box-shadow:
         0 1px 0 rgba(255, 246, 233, 0.28),
-        0 0 0 10px rgba(236, 219, 191, 0.12);
+        0 0 0 clamp(3px, calc(var(--board-cell) * 0.07), 10px) rgba(236, 219, 191, 0.12);
       opacity: 0.82;
     }
 
@@ -676,7 +688,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 16px 18px;
+      padding: var(--card-pad-y) var(--card-pad-x);
       color: #fff8ef;
     }
 
@@ -687,13 +699,13 @@
     .overlay.centered {
       align-items: center;
       justify-content: center;
-      padding: 18px;
+      padding: var(--card-pad-y) var(--card-pad-x);
     }
 
     .overlay::before {
       content: "";
       position: absolute;
-      inset: 10px;
+      inset: clamp(4px, calc(var(--board-cell) * 0.07), 10px);
       border-radius: 14px;
       border: 1px solid rgba(255, 255, 255, 0.16);
     }
@@ -722,11 +734,13 @@
       align-items: center;
       justify-content: center;
       min-height: 42%;
-      font-size: clamp(0.74rem, 1.35vw, 1.1rem);
+      font-size: var(--overlay-word-size);
       font-weight: 900;
-      letter-spacing: 0.18em;
+      letter-spacing: 0;
       text-transform: uppercase;
       text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     .overlay-word.bottom {
@@ -737,12 +751,15 @@
       position: relative;
       z-index: 1;
       align-self: center;
-      min-width: 64px;
-      padding: 10px 16px;
+      min-width: min(64px, 78%);
+      padding: var(--word-box-pad-y) var(--word-box-pad-x);
       border-radius: 999px;
       text-align: center;
       font-weight: 900;
-      letter-spacing: 0.12em;
+      letter-spacing: 0;
+      font-size: var(--overlay-badge-size);
+      white-space: nowrap;
+      overflow: hidden;
       background: rgba(255, 255, 255, 0.14);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
     }
@@ -754,8 +771,8 @@
 
     .overlay.centered .overlay-badge {
       min-width: min(78%, 12rem);
-      padding: 14px 18px;
-      font-size: clamp(0.92rem, 1.6vw, 1.16rem);
+      padding: calc(var(--word-box-pad-y) + 2px) calc(var(--word-box-pad-x) + 4px);
+      font-size: var(--overlay-badge-size);
     }
 
     .keep-awake-video {
@@ -1110,23 +1127,23 @@
 
       .card-face,
       .overlay {
-        padding: 12px;
+        padding: var(--card-pad-y) var(--card-pad-x);
       }
 
       .word-row {
         font-size: var(--word-size);
-        letter-spacing: 0.05em;
+        letter-spacing: 0;
       }
 
       .overlay-word {
-        font-size: clamp(0.52rem, 2vw, 0.78rem);
-        letter-spacing: 0.09em;
+        font-size: var(--overlay-word-size);
+        letter-spacing: 0;
       }
 
       .word-box {
         min-width: 82%;
         min-height: var(--word-box-height);
-        padding: 8px 8px;
+        padding: var(--word-box-pad-y) var(--word-box-pad-x);
         border-radius: 12px;
       }
 
@@ -1496,10 +1513,15 @@
     const solutionCardInput = document.getElementById("solutionCardInput");
 
     let settingsOpen = false;
+    let boardSizingFrame = 0;
+    const boardResizeObserver = "ResizeObserver" in window
+      ? new ResizeObserver(scheduleBoardSizing)
+      : null;
 
     renderCycleLegend();
     renderVariantButtons();
     attachEvents();
+    boardResizeObserver?.observe(boardWrap);
     render();
 
     if (state.keepAwake) {
@@ -1642,8 +1664,8 @@
         render();
         void syncWakeLockState();
       });
-      window.addEventListener("resize", updateBoardSizing);
-      window.visualViewport?.addEventListener("resize", updateBoardSizing);
+      window.addEventListener("resize", scheduleBoardSizing);
+      window.visualViewport?.addEventListener("resize", scheduleBoardSizing);
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && settingsOpen) {
           setSettingsOpen(false);
@@ -1681,27 +1703,123 @@
       updateBoardSizing();
     }
 
+    function scheduleBoardSizing() {
+      if (boardSizingFrame) {
+        return;
+      }
+
+      boardSizingFrame = window.requestAnimationFrame(() => {
+        boardSizingFrame = 0;
+        updateBoardSizing();
+      });
+    }
+
     function updateBoardSizing() {
       const gap = parseFloat(getComputedStyle(document.body).getPropertyValue("--board-gap")) || 8;
       const ratio = 0.74;
-      const boardWidth = boardWrap.clientWidth;
-      const boardHeight = boardWrap.clientHeight;
+      const wrapStyle = getComputedStyle(boardWrap);
+      const inlinePadding = cssPixels(wrapStyle, "padding-left") + cssPixels(wrapStyle, "padding-right");
+      const blockPadding = cssPixels(wrapStyle, "padding-top") + cssPixels(wrapStyle, "padding-bottom");
+      const boardWidth = Math.max(0, boardWrap.clientWidth - inlinePadding);
       if (!boardWidth) {
         return;
       }
+
+      const viewport = window.visualViewport;
+      const viewportWidth = viewport?.width || window.innerWidth || boardWrap.clientWidth;
+      const viewportHeight = viewport?.height || window.innerHeight || boardWrap.clientHeight;
+      const wrapTop = Math.max(0, boardWrap.getBoundingClientRect().top);
+      const viewportHeightBudget = Math.max(0, viewportHeight - wrapTop - 12 - blockPadding);
+      const fullscreenHeightBudget = document.fullscreenElement
+        ? Math.max(0, boardWrap.clientHeight - blockPadding)
+        : 0;
+      const boardHeight = Math.max(viewportHeightBudget, fullscreenHeightBudget);
 
       const byWidth = (boardWidth - gap * 4) / 5;
       const byHeight = boardHeight
         ? (boardHeight - gap * 4) / (5 * ratio)
         : byWidth;
-      const cellSize = Math.max(42, Math.floor(Math.min(byWidth, byHeight)));
+      const minimumCellSize = viewportWidth < 520 || viewportHeight < 520 ? 34 : 42;
+      const rawCellSize = Math.min(byWidth, byHeight);
+      const cellSize = Math.max(minimumCellSize, Math.floor(Number.isFinite(rawCellSize) ? rawCellSize : byWidth));
+      const rowHeight = cellSize * ratio;
+      const cardPadY = clampNumber(rowHeight * 0.075, 3, 10);
+      const cardPadX = clampNumber(cellSize * 0.09, 5, 18);
+      const dividerHeight = clampNumber(rowHeight * 0.035, 2, 5);
+      const availableLabelHeight = Math.max(8, (rowHeight - cardPadY * 2 - dividerHeight) / 2);
+      const boxHeight = clampNumber(availableLabelHeight * 0.94, 8, 42);
+      const wordSize = clampNumber(Math.min(cellSize * 0.14, boxHeight * 0.62), 5.2, 18);
+      const wordBoxPadX = clampNumber(cellSize * 0.055, 3, 12);
+      const wordBoxPadY = clampNumber(boxHeight * 0.14, 1, 8);
+      const wayfinderPadLeft = clampNumber(cellSize * 0.18, 15, 34);
+      const wayfinderDotLeft = clampNumber(cellSize * 0.085, 5, 12);
+      const wayfinderDotSize = clampNumber(cellSize * 0.075, 5, 10);
+      const overlayWordSize = clampNumber(Math.min(cellSize * 0.1, rowHeight * 0.18), 6.2, 15);
+      const overlayBadgeSize = clampNumber(Math.min(cellSize * 0.12, rowHeight * 0.22), 7, 16);
 
-      const wordSize = Math.max(8.8, Math.min(20, cellSize * 0.16));
-      const boxHeight = Math.max(18, Math.min(58, cellSize * 0.3));
+      setBodyPixels("--board-cell", cellSize);
+      setBodyPixels("--word-size", wordSize);
+      setBodyPixels("--word-box-height", boxHeight);
+      setBodyPixels("--card-pad-x", cardPadX);
+      setBodyPixels("--card-pad-y", cardPadY);
+      setBodyPixels("--word-box-pad-x", wordBoxPadX);
+      setBodyPixels("--word-box-pad-y", wordBoxPadY);
+      setBodyPixels("--word-divider-height", dividerHeight);
+      setBodyPixels("--wayfinder-pad-left", wayfinderPadLeft);
+      setBodyPixels("--wayfinder-dot-left", wayfinderDotLeft);
+      setBodyPixels("--wayfinder-dot-size", wayfinderDotSize);
+      setBodyPixels("--overlay-word-size", overlayWordSize);
+      setBodyPixels("--overlay-badge-size", overlayBadgeSize);
+      fitCardText(wordSize, overlayWordSize, overlayBadgeSize, cellSize);
+    }
 
-      document.body.style.setProperty("--board-cell", `${cellSize}px`);
-      document.body.style.setProperty("--word-size", `${wordSize}px`);
-      document.body.style.setProperty("--word-box-height", `${boxHeight}px`);
+    function cssPixels(style, property) {
+      return parseFloat(style.getPropertyValue(property)) || 0;
+    }
+
+    function clampNumber(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function setBodyPixels(property, value) {
+      document.body.style.setProperty(property, `${Number(value).toFixed(2)}px`);
+    }
+
+    function fitCardText(wordSize, overlayWordSize, overlayBadgeSize, cellSize) {
+      const minWordSize = clampNumber(cellSize * 0.07, 5.2, Math.min(8.5, wordSize));
+      const minOverlaySize = clampNumber(cellSize * 0.06, 5.2, Math.min(8, overlayWordSize));
+      const minBadgeSize = clampNumber(cellSize * 0.07, 5.8, Math.min(8.5, overlayBadgeSize));
+
+      board.querySelectorAll(".card").forEach((card) => {
+        fitElementsTogether(card.querySelectorAll(".word-box"), wordSize, minWordSize);
+        fitElementsTogether(card.querySelectorAll(".overlay-word"), overlayWordSize, minOverlaySize);
+        fitElementsTogether(card.querySelectorAll(".overlay-badge"), overlayBadgeSize, minBadgeSize);
+      });
+    }
+
+    function fitElementsTogether(elements, baseSize, minSize) {
+      const targets = Array.from(elements);
+      if (!targets.length) {
+        return;
+      }
+
+      targets.forEach((target) => target.style.removeProperty("font-size"));
+      const scale = targets.reduce((nextScale, target) => {
+        if (!target.clientWidth || !target.scrollWidth || target.scrollWidth <= target.clientWidth) {
+          return nextScale;
+        }
+
+        return Math.min(nextScale, target.clientWidth / target.scrollWidth);
+      }, 1);
+
+      if (scale >= 1) {
+        return;
+      }
+
+      const fittedSize = Math.max(minSize, baseSize * scale * 0.98);
+      targets.forEach((target) => {
+        target.style.fontSize = `${fittedSize.toFixed(2)}px`;
+      });
     }
 
     function setSettingsOpen(nextOpen) {
