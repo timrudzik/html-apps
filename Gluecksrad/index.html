@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15131f">
+  <title>Glücksrad</title>
+  <style>
+    :root{--bg:#0f1022;--panel:#171a33cc;--line:#ffffff22;--text:#f5f6ff;--muted:#b8bdd6;--accent:#8c6bff;}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:Inter,system-ui,sans-serif;color:var(--text);background:radial-gradient(1200px 600px at 20% -10%,#3f2a77 0%,transparent 60%),radial-gradient(1000px 700px at 80% 0%,#17456b 0%,transparent 60%),linear-gradient(180deg,#0d0f1e,#0c1022 45%,#11152a)}
+    .wrap{width:min(1160px,calc(100% - 20px));margin:20px auto;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(6px);box-shadow:0 20px 40px #0007;padding:16px}
+    .wheel-zone{position:relative;display:grid;place-items:center;overflow:hidden}
+    canvas{width:min(78vh,100%);height:auto;max-width:660px;aspect-ratio:1/1;filter:drop-shadow(0 16px 25px #000a)}
+    .pointer{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #fff;filter:drop-shadow(0 2px 5px #0008);z-index:4}
+    .controls{display:grid;gap:10px}
+    h1{margin:0 0 6px;font-size:1.6rem}
+    p{margin:0;color:var(--muted)}
+    textarea{width:100%;min-height:260px;border-radius:14px;border:1px solid #ffffff26;background:#0d1020;color:var(--text);padding:12px;font:500 0.95rem/1.45 ui-monospace,monospace;resize:vertical}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    button{border:0;border-radius:14px;padding:11px 14px;font-weight:700;color:white;background:linear-gradient(135deg,#8c6bff,#35c7ff);cursor:pointer;transition:transform .14s ease,filter .14s ease}
+    button:hover{transform:translateY(-1px);filter:brightness(1.1)}
+    .secondary{background:#ffffff16;border:1px solid #ffffff28}
+    .result{margin-top:8px;font-size:1.25rem;font-weight:800;min-height:1.6em}
+    .spark{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at center,#ffffff44,transparent 45%);opacity:0;z-index:3}
+    .spin .spark{animation:flare .9s ease}
+    @keyframes flare{0%{opacity:0}30%{opacity:.65}100%{opacity:0}}
+    .winner-pop{animation:pop .45s cubic-bezier(.2,.9,.3,1.2)}
+    @keyframes pop{0%{transform:scale(.9);opacity:.2}100%{transform:scale(1);opacity:1}}
+    @media(max-width:980px){.wrap{grid-template-columns:1fr}.pointer{top:8px}}
+    @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="panel wheel-zone" id="wheelZone">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="900" height="900" aria-label="Glücksrad"></canvas>
+      <div class="spark"></div>
+    </section>
+
+    <section class="panel controls">
+      <h1>🎡 Glücksrad</h1>
+      <p>Namen zeilenweise eintragen, dann drehen. Das Rad stoppt sauber auf einem Feld.</p>
+      <div class="row">
+        <button id="spinBtn">Rad drehen</button>
+        <button class="secondary" id="shuffleBtn">Farben mischen</button>
+        <button class="secondary" id="resetBtn">Defaults laden</button>
+      </div>
+      <textarea id="names"></textarea>
+      <div class="result" id="result" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script>
+    const defaultNames = ["Christiane","Mildred","Anke","Maya","Benedikt","Melanie","Dominik","Patrick","Theresa","Tim","Katharina","Hannes","Michael","Dr. Schü","Henrik","Johannes","Sebastian","Maximilian G.","Thomas Just","Julian","Moritz","Max J.","Max K.","Sami","Edward","Nils"];
+    const palette = ["#ff6b6b","#ff9f43","#feca57","#1dd1a1","#54a0ff","#5f27cd","#ee5253","#10ac84","#2e86de","#ff7f50","#9b59b6","#48dbfb"];
+
+    const wheel = document.getElementById('wheel');
+    const ctx = wheel.getContext('2d');
+    const namesEl = document.getElementById('names');
+    const resultEl = document.getElementById('result');
+    const zoneEl = document.getElementById('wheelZone');
+    const spinBtn = document.getElementById('spinBtn');
+    namesEl.value = defaultNames.join('\n');
+
+    let names = defaultNames.slice();
+    let rotation = 0;
+    let spinning = false;
+    let colorOffset = 0;
+
+    const getNames = () => namesEl.value.split('\n').map(v=>v.trim()).filter(Boolean);
+
+    function draw() {
+      names = getNames();
+      const n = Math.max(names.length, 1);
+      const cx = wheel.width / 2;
+      const cy = wheel.height / 2;
+      const r = wheel.width * 0.47;
+      const step = Math.PI * 2 / n;
+      ctx.clearRect(0,0,wheel.width,wheel.height);
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.rotate(rotation);
+
+      for (let i=0;i<n;i++) {
+        const a0 = i * step - Math.PI/2;
+        const a1 = a0 + step;
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0,0,r,a0,a1);
+        ctx.closePath();
+        ctx.fillStyle = palette[(i+colorOffset)%palette.length];
+        ctx.fill();
+
+        ctx.save();
+        ctx.rotate(a0 + step/2);
+        ctx.translate(r*0.62,0);
+        ctx.rotate(Math.PI/2);
+        ctx.fillStyle = 'white';
+        ctx.font = `700 ${Math.max(18, Math.min(30, 420/n))}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const text = names[i] || '—';
+        ctx.fillText(text, 0, 0, r*0.36);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(0,0,r*0.08,0,Math.PI*2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.lineWidth = 8;ctx.strokeStyle = '#00000033';ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function winnerAtCurrentRotation(list) {
+      const n = list.length;
+      const step = Math.PI*2/n;
+      const normalized = ((rotation % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+      const pointerAngleInWheel = (Math.PI * 1.5 - normalized + Math.PI*2) % (Math.PI*2);
+      const idx = Math.floor(pointerAngleInWheel / step) % n;
+      return list[idx];
+    }
+
+    function spin() {
+      const list = getNames();
+      if (spinning || list.length < 2) return;
+      spinning = true;
+      resultEl.textContent = '';
+      zoneEl.classList.add('spin');
+
+      const n = list.length;
+      const step = Math.PI * 2 / n;
+      const targetIndex = Math.floor(Math.random() * n);
+      const desired = (Math.PI * 1.5) - (targetIndex + 0.5) * step;
+      const start = rotation;
+      const extra = Math.PI * 2 * (7 + Math.random()*2);
+      const end = desired + extra;
+      const duration = 4500 + Math.random()*1500;
+      const t0 = performance.now();
+
+      const ease = t => 1 - Math.pow(1-t, 4);
+      function frame(t){
+        const p = Math.min(1,(t-t0)/duration);
+        rotation = start + (end-start) * ease(p);
+        draw();
+        if(p<1) requestAnimationFrame(frame); else {
+          spinning = false;
+          zoneEl.classList.remove('spin');
+          const w = winnerAtCurrentRotation(list);
+          resultEl.textContent = `🎉 Gewonnen: ${w}`;
+          resultEl.classList.remove('winner-pop');
+          void resultEl.offsetWidth;
+          resultEl.classList.add('winner-pop');
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    namesEl.addEventListener('input', draw);
+    spinBtn.addEventListener('click', spin);
+    document.getElementById('shuffleBtn').addEventListener('click', ()=>{colorOffset=(colorOffset+1)%palette.length;draw();});
+    document.getElementById('resetBtn').addEventListener('click', ()=>{namesEl.value=defaultNames.join('\n');draw();});
+    draw();
+  </script>
+</body>
+</html>
