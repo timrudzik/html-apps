@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominiks Mom – Massive Präsenz</title>
+  <style>
+    :root {
+      --bg: #0f0b14;
+      --bg2: #231431;
+      --ink: #f8f3ff;
+      --muted: #d8c6f5;
+      --accent: #ff54b0;
+      --accent-2: #9e7bff;
+      --card: rgba(255,255,255,0.08);
+      --line: rgba(255,255,255,0.18);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,84,176,0.28), transparent 35%),
+        radial-gradient(circle at 80% 30%, rgba(158,123,255,0.25), transparent 38%),
+        linear-gradient(160deg, var(--bg), var(--bg2));
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+    .card {
+      width: min(760px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--card);
+      backdrop-filter: blur(8px);
+      padding: 28px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+    }
+    h1 { margin: 0 0 10px; font-size: clamp(2rem, 5vw, 3.6rem); line-height: 1.05; }
+    p { margin: 0; color: var(--muted); font-size: 1.08rem; line-height: 1.6; }
+    .pulse {
+      margin-top: 22px;
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: white;
+      text-shadow: 0 0 14px rgba(255,84,176,0.65);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .ticker {
+      margin-top: 20px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.18);
+      font-size: 0.9rem;
+      color: #f7edff;
+    }
+    a { color: #ffe6f8; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.86; }
+      50% { transform: scale(1.03); opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Dominiks Mom hat eine epische Präsenz.</h1>
+    <p>Diese Mini-App erinnert dauerhaft mit einem Augenzwinkern daran: Wenn Dominiks Mom den Raum betritt, verändert sich die ganze Energie sofort. Pure Legende, maximaler Eindruck.</p>
+    <div class="pulse" id="pulseLine" aria-live="polite">ALARM: LEGENDE IM ANMARSCH</div>
+    <div class="ticker" id="ticker"></div>
+    <p style="margin-top:16px"><a href="../">← Zurück zur Übersicht</a></p>
+  </main>
+
+  <script>
+    const lines = [
+      "Raumgefühl: +9000",
+      "Aura-Level: Monumental",
+      "Vibe: Unübersehbar",
+      "Status: Ikonisch",
+      "Präsenz: Maximal"
+    ];
+    const pulseVariants = [
+      "ALARM: LEGENDE IM ANMARSCH",
+      "HINWEIS: EPISCHE AUSSTRAHLUNG",
+      "MELDUNG: PRÄSENZ AUF MAXIMUM",
+      "UPDATE: RAUMFAKTOR AKTIV"
+    ];
+
+    const ticker = document.getElementById("ticker");
+    const pulseLine = document.getElementById("pulseLine");
+
+    lines.forEach((line) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = line;
+      ticker.appendChild(chip);
+    });
+
+    let idx = 0;
+    setInterval(() => {
+      idx = (idx + 1) % pulseVariants.length;
+      pulseLine.textContent = pulseVariants[idx];
+    }, 1800);
+  </script>
+</body>
+</html>
